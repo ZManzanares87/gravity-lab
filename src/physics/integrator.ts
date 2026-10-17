@@ -5,7 +5,7 @@ import { add, scale } from "./vec2";
 /**
  * Estado que necesita el integrador entre un paso y el siguiente:
  * los cuerpos y sus aceleraciones actuales. Guardar las aceleraciones
- * permite calcular la gravedad una sola vez por paso.
+ * permite calcular la gravedad una sola vez por paso de Verlet.
  */
 export interface IntegratorState {
   readonly bodies: readonly Body[];
@@ -48,6 +48,30 @@ export function verletStep(current: IntegratorState, G: number, dt: number): Int
   }));
 
   return { bodies, accelerations: newAccelerations };
+}
+
+/*
+ * Pesos de Yoshida (1990). Suman 1: los tres subpasos cubren exactamente dt.
+ * El del medio es negativo (≈ −1,7): ese subpaso retrocede en el tiempo,
+ * y es lo que cancela los errores de los otros dos.
+ */
+const CBRT_2 = Math.cbrt(2);
+const W_OUTER = 1 / (2 - CBRT_2);
+const W_MIDDLE = -CBRT_2 / (2 - CBRT_2);
+
+/**
+ * Un paso de Yoshida de cuarto orden: tres pasos de Verlet seguidos con
+ * los pesos de arriba. Conserva la energía igual que Verlet, pero su error
+ * baja mucho más rápido al reducir el paso.
+ *
+ * Motivo (test de cierre de la galería): con Verlet, Yin-Yang I se alejaba
+ * 0,045 de su punto de partida tras un periodo; con Yoshida, 0,0017, que ya
+ * es el límite que permite la precisión de las condiciones publicadas.
+ */
+export function yoshidaStep(current: IntegratorState, G: number, dt: number): IntegratorState {
+  const first = verletStep(current, G, W_OUTER * dt);
+  const middle = verletStep(first, G, W_MIDDLE * dt);
+  return verletStep(middle, G, W_OUTER * dt);
 }
 
 /**

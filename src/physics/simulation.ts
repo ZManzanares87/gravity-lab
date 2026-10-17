@@ -1,5 +1,5 @@
 import { findContact, resolveContact } from "./collisions";
-import { startIntegrator, verletStep, type IntegratorState } from "./integrator";
+import { startIntegrator, yoshidaStep, type IntegratorState } from "./integrator";
 import type { Body, Contact, PhysicsConfig, SimState } from "./types";
 
 /** Una simulación en marcha: configuración, reloj y estado del integrador. */
@@ -30,9 +30,11 @@ export function advance(simulation: Simulation, steps: number): AdvanceResult {
   let time = simulation.time;
 
   for (let i = 0; i < steps; i++) {
-    integrator = verletStep(integrator, G, dt);
+    integrator = yoshidaStep(integrator, G, dt);
     time += dt;
 
+    // El contacto se comprueba tras el paso completo, nunca entre los
+    // subpasos de Yoshida (uno de ellos retrocede en el tiempo).
     const pair = findContact(integrator.bodies);
     if (pair) {
       const resolved = resolveContact(integrator.bodies, pair);
