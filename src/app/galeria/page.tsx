@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { solutionCardId } from "@/gallery/cardId";
+import { RestoreGalleryFocus } from "@/gallery/components/GalleryFocus";
 import { OrbitThumbnail } from "@/gallery/components/OrbitThumbnail";
 import { SOLUTIONS } from "@/gallery/solutions";
 import { sampleTrajectory } from "@/gallery/trajectory";
@@ -15,6 +17,7 @@ export const metadata: Metadata = {
 export default function GalleryPage() {
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-12">
+      <RestoreGalleryFocus />
       <h1 className="text-3xl font-bold sm:text-4xl">El problema de los tres cuerpos</h1>
 
       <div className="mt-4 max-w-2xl space-y-3 text-lg text-ink-soft">
@@ -34,7 +37,7 @@ export default function GalleryPage() {
           <li key={solution.slug}>
             <Link
               href={`/galeria/${solution.slug}`}
-              id={`orbita-${solution.slug}`}
+              id={solutionCardId(solution.slug)}
               className="block h-full border border-ink/20 bg-paper p-4 transition-colors hover:border-ink"
             >
               <div className="aspect-[4/3]">

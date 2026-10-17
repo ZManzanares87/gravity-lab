@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { RememberOpenedSolution } from "@/gallery/components/GalleryFocus";
 import { OrbitPlayer } from "@/gallery/components/OrbitPlayer";
 import { findSolution, SOLUTIONS } from "@/gallery/solutions";
 import { sampleTrajectory } from "@/gallery/trajectory";
@@ -32,6 +33,7 @@ export default async function SolutionPage({ params }: PageProps<"/galeria/[slug
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-8">
+      <RememberOpenedSolution slug={solution.slug} />
       <Link href="/galeria" className="underline underline-offset-4 hover:text-body-a">
         Volver a la galería
       </Link>
