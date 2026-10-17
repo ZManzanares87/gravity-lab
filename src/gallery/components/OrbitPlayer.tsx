@@ -25,7 +25,7 @@ interface TrailPoint {
 
 interface OrbitPlayerProps {
   readonly solution: ThreeBodySolution;
-  /** La órbita completa, calculada en el servidor: se dibuja tenue de fondo. */
+  /** La órbita completa, calculada en el servidor: se dibuja de fondo. */
   readonly trajectory: Trajectory;
 }
 
@@ -53,12 +53,19 @@ export function OrbitPlayer({ solution, trajectory }: OrbitPlayerProps) {
     const paper = styles.getPropertyValue("--color-paper").trim();
     const fontFamily = getComputedStyle(canvas).fontFamily;
 
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const bounds = trajectoryBounds(trajectory);
     const trailDuration = TRAIL_FRACTION * solution.period;
     const trails: TrailPoint[][] = solution.bodies.map(() => []);
     let completedLoops = 0;
     let previousTime = 0;
     let lastClockUpdate = 0;
+    /**
+     * Durante la primera vuelta, los cuerpos van dibujando su órbita.
+     * Con movimiento reducido, la figura se muestra completa desde el inicio:
+     * esas personas no deberían tener que esperar a una animación.
+     */
+    let showFullOrbit = prefersReducedMotion;
 
     /**
      * Añade la posición actual a las estelas y descarta los puntos más
@@ -67,7 +74,10 @@ export function OrbitPlayer({ solution, trajectory }: OrbitPlayerProps) {
      * de la vuelta coincide con el inicio (test de cierre de la galería).
      */
     const record = (state: SimState) => {
-      if (state.time < previousTime) completedLoops += 1;
+      if (state.time < previousTime) {
+        completedLoops += 1;
+        showFullOrbit = true;
+      }
       previousTime = state.time;
       const now = completedLoops * solution.period + state.time;
 
@@ -112,12 +122,21 @@ export function OrbitPlayer({ solution, trajectory }: OrbitPlayerProps) {
         context.stroke();
       };
 
-      // 1. La órbita completa, tenue.
-      context.globalAlpha = 0.25;
-      context.lineWidth = 1;
+      // 1. La órbita de fondo: en la primera vuelta, solo el tramo ya recorrido.
+      context.globalAlpha = 0.3;
+      context.lineWidth = 1.5;
       trajectory.forEach((points, i) => {
         context.strokeStyle = colors[i] ?? ink;
-        strokeLine(points);
+        if (showFullOrbit) {
+          strokeLine(points);
+          return;
+        }
+        // Los puntos de la trayectoria están repartidos por igual en el tiempo,
+        // así que la fracción del periodo transcurrida dice cuántos dibujar.
+        const visible = Math.floor((state.time / solution.period) * (points.length - 1)) + 1;
+        const body = state.bodies[i];
+        // Terminamos en la posición actual del cuerpo para que el trazo no vaya por detrás.
+        strokeLine(body ? [...points.slice(0, visible), body.position] : points.slice(0, visible));
       });
 
       // 2. Las estelas.
@@ -164,11 +183,12 @@ export function OrbitPlayer({ solution, trajectory }: OrbitPlayerProps) {
     });
     runnerRef.current = runner;
 
-    // Reiniciar sí borra las estelas: es volver a empezar de verdad.
+    // Reiniciar sí borra las estelas y el dibujo: es volver a empezar de verdad.
     resetRef.current = () => {
       trails.forEach((trail) => (trail.length = 0));
       completedLoops = 0;
       previousTime = 0;
+      showFullOrbit = prefersReducedMotion;
       runner.reset();
     };
 
@@ -176,7 +196,7 @@ export function OrbitPlayer({ solution, trajectory }: OrbitPlayerProps) {
     render(runner.state);
 
     // Si el sistema pide menos movimiento, la animación empieza en pausa.
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) runner.play();
+    if (!prefersReducedMotion) runner.play();
 
     // En pausa no hay fotogramas: si cambia el tamaño, redibujamos a mano.
     const observer = new ResizeObserver(() => render(runner.state));
