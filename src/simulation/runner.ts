@@ -26,6 +26,8 @@ export interface RunnerOptions {
   readonly onFrame: (state: SimState) => void;
   /** Se llama si dos cuerpos se tocan; el runner ya se ha pausado. */
   readonly onContact?: (contact: Contact) => void;
+  /** Se llama cada vez que la simulación arranca o se para, por la causa que sea. */
+  readonly onRunningChange?: (running: boolean) => void;
   readonly scheduler?: FrameScheduler;
 }
 
@@ -67,11 +69,14 @@ export class SimulationRunner {
     if (this.isRunning) return;
     this.lastTimestamp = null;
     this.frameId = this.scheduler.request(this.tick);
+    this.options.onRunningChange?.(true);
   }
 
   pause(): void {
-    if (this.frameId !== null) this.scheduler.cancel(this.frameId);
+    if (this.frameId === null) return;
+    this.scheduler.cancel(this.frameId);
     this.frameId = null;
+    this.options.onRunningChange?.(false);
   }
 
   /** Vuelve a las condiciones iniciales, sin cambiar si estaba en marcha. */
