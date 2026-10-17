@@ -41,14 +41,8 @@ export interface PhysicsConfig {
 
 /** Contacto entre dos cuerpos: la simulación debe pausarse y anunciarlo. */
 export interface Contact {
+  /** El cuerpo más ligero, que queda apoyado sobre el otro. */
   readonly bodyId: string;
   readonly otherBodyId: string;
   readonly time: number;
-}
-
-/** Resultado de avanzar un paso. */
-export interface StepResult {
-  readonly state: SimState;
-  /** El contacto ocurrido en este paso, o null si no hubo ninguno. */
-  readonly contact: Contact | null;
 }
