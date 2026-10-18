@@ -221,6 +221,6 @@ export type SceneId = keyof typeof SCENES;
 export const SCENE_ORDER: readonly SceneId[] = ["superficie", "altura", "lanzamiento", "tercer-cuerpo"];
 
 /** Mantiene un valor dentro del rango de su control. */
-export function clampParam<P extends Params>(spec: ParamSpec<P>, value: number): number {
+export function clampParam(spec: { readonly min: number; readonly max: number }, value: number): number {
   return Math.min(spec.max, Math.max(spec.min, value));
 }
