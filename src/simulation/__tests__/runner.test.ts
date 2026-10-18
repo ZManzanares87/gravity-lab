@@ -80,7 +80,7 @@ describe("SimulationRunner", () => {
       physics: { G: G_SI, dt: 1e-3 },
       timeScale: 1,
       onFrame: () => {},
-      onContact: (contact) => (contactWith = contact.otherBodyId),
+      onContacts: (contacts) => (contactWith = contacts[0]?.otherBodyId ?? null),
       scheduler,
     });
 

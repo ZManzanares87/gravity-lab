@@ -24,8 +24,8 @@ export interface RunnerOptions {
   readonly loopAt?: number;
   /** Se llama con cada estado nuevo: es lo que se dibuja. */
   readonly onFrame: (state: SimState) => void;
-  /** Se llama si dos cuerpos se tocan; el runner ya se ha pausado. */
-  readonly onContact?: (contact: Contact) => void;
+  /** Se llama si hay contactos; el runner ya se ha pausado. */
+  readonly onContacts?: (contacts: readonly Contact[]) => void;
   /** Se llama cada vez que la simulación arranca o se para, por la causa que sea. */
   readonly onRunningChange?: (running: boolean) => void;
   readonly scheduler?: FrameScheduler;
@@ -117,9 +117,9 @@ export class SimulationRunner {
 
     this.options.onFrame(this.state);
 
-    if (result.contact) {
+    if (result.contacts.length > 0) {
       this.pause();
-      this.options.onContact?.(result.contact);
+      this.options.onContacts?.(result.contacts);
       return;
     }
 

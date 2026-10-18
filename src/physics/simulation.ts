@@ -1,4 +1,4 @@
-import { findContact, resolveContact } from "./collisions";
+import { findContacts, resolveContacts } from "./collisions";
 import { startIntegrator, yoshidaStep, type IntegratorState } from "./integrator";
 import type { Body, Contact, PhysicsConfig, SimState } from "./types";
 
@@ -11,8 +11,8 @@ export interface Simulation {
 
 export interface AdvanceResult {
   readonly simulation: Simulation;
-  /** Si hubo contacto, la simulación se detuvo en ese paso. */
-  readonly contact: Contact | null;
+  /** Contactos del paso en que se detuvo. Vacío si no hubo ninguno. */
+  readonly contacts: readonly Contact[];
 }
 
 export function createSimulation(bodies: readonly Body[], config: PhysicsConfig): Simulation {
@@ -20,9 +20,9 @@ export function createSimulation(bodies: readonly Body[], config: PhysicsConfig)
 }
 
 /**
- * Avanza la simulación un número de pasos fijos. Si dos cuerpos se tocan,
- * resuelve el contacto y se detiene en ese mismo paso: quien la usa debe
- * pausar y anunciarlo.
+ * Avanza la simulación un número de pasos fijos. Si hay contactos, los
+ * resuelve todos y se detiene en ese mismo paso: quien la usa debe pausar
+ * y anunciarlos.
  */
 export function advance(simulation: Simulation, steps: number): AdvanceResult {
   const { G, dt } = simulation.config;
@@ -35,18 +35,22 @@ export function advance(simulation: Simulation, steps: number): AdvanceResult {
 
     // El contacto se comprueba tras el paso completo, nunca entre los
     // subpasos de Yoshida (uno de ellos retrocede en el tiempo).
-    const pair = findContact(integrator.bodies);
-    if (pair) {
-      const resolved = resolveContact(integrator.bodies, pair);
+    const pairs = findContacts(integrator.bodies);
+    if (pairs.length > 0) {
+      const resolved = resolveContacts(integrator.bodies, pairs);
       return {
-        // Tras mover un cuerpo, las aceleraciones guardadas ya no valen: se recalculan.
+        // Tras mover cuerpos, las aceleraciones guardadas ya no valen: se recalculan.
         simulation: { ...simulation, time, integrator: startIntegrator(resolved.bodies, G) },
-        contact: { bodyId: resolved.landed.id, otherBodyId: resolved.base.id, time },
+        contacts: resolved.landings.map(({ landedId, baseId }) => ({
+          bodyId: landedId,
+          otherBodyId: baseId,
+          time,
+        })),
       };
     }
   }
 
-  return { simulation: { ...simulation, time, integrator }, contact: null };
+  return { simulation: { ...simulation, time, integrator }, contacts: [] };
 }
 
 /** La foto del instante actual, para dibujar o enviar a la IA. */
