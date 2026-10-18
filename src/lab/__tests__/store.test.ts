@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SCENES } from "../scenes";
 import { createLabStore } from "../store";
 
 describe("store del laboratorio", () => {
@@ -10,7 +11,7 @@ describe("store del laboratorio", () => {
     store.getState().dispatch({ type: "loadScene", scene: "lanzamiento" });
     const state = store.getState();
 
-    expect(state.params).toEqual({ speed: 3 });
+    expect(state.params).toEqual(SCENES.lanzamiento.defaults);
     expect(state.selectedOption).toBeNull();
     expect(state.revealed).toBe(false);
     expect(state.finished).toBe(false);

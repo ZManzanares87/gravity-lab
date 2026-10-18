@@ -4,8 +4,8 @@ import { vec, ZERO } from "@/physics/vec2";
 
 /**
  * Las cuatro escenas del laboratorio. Los parámetros se guardan en las
- * unidades que ve el usuario (m, km, km/s, kg): así los controles, las
- * explicaciones y el tutor IA hablan el mismo idioma. Cada escena los
+ * unidades que ve el usuario (m, km, km/s, kg, grados): así los controles,
+ * las explicaciones y el tutor IA hablan el mismo idioma. Cada escena los
  * convierte a unidades del Sistema Internacional al construir los cuerpos.
  */
 
@@ -44,6 +44,8 @@ export interface SceneDefinition<P extends Params> {
   readonly title: string;
   readonly defaults: P;
   readonly params: readonly ParamSpec<P>[];
+  /** Constante G de la escena: la real o 1 en unidades abstractas. */
+  readonly G: number;
   /** Ausente en Altura, que es un medidor sin animación. */
   readonly run?: SceneRun;
   buildBodies(params: P): Body[];
@@ -56,8 +58,9 @@ function defineScene<P extends Params>(scene: SceneDefinition<P>): SceneDefiniti
 }
 
 const R = EARTH_RADIUS;
+const DEGREES = Math.PI / 180;
 
-const earth: Body = {
+export const EARTH: Body = {
   id: "tierra",
   name: "Tierra",
   mass: EARTH_MASS,
@@ -72,12 +75,14 @@ const TENNIS_RADIUS = 0.033;
 
 const superficie = defineScene({
   title: "Superficie",
-  defaults: { height: 10, bowlingMass: 7, tennisMass: 0.058 },
+  defaults: { height: 10, bowlingMass: 7, tennisMass: 0.058, upSpeed: 0 },
   params: [
     { key: "height", label: "Altura", unit: "m", min: 1, max: 100, scale: "linear" },
     { key: "bowlingMass", label: "Masa de la bola", unit: "kg", min: 0.01, max: 1000, scale: "log" },
     { key: "tennisMass", label: "Masa de la pelota", unit: "kg", min: 0.01, max: 1000, scale: "log" },
+    { key: "upSpeed", label: "Velocidad inicial hacia arriba", unit: "m/s", min: 0, max: 30, scale: "linear" },
   ],
+  G: G_SI,
   run: {
     physics: { G: G_SI, dt: 1e-3 },
     timeScale: 1,
@@ -85,15 +90,15 @@ const superficie = defineScene({
   },
   // La altura se mide desde la parte de abajo de cada bola: las dos
   // tienen que recorrer exactamente la misma distancia.
-  buildBodies: ({ height, bowlingMass, tennisMass }) => [
-    earth,
+  buildBodies: ({ height, bowlingMass, tennisMass, upSpeed }) => [
+    EARTH,
     {
       id: "bola",
       name: "Bola de bolos",
       mass: bowlingMass,
       radius: BOWLING_RADIUS,
       position: vec(-1, R + height + BOWLING_RADIUS),
-      velocity: ZERO,
+      velocity: vec(0, upSpeed),
     },
     {
       id: "pelota",
@@ -101,12 +106,14 @@ const superficie = defineScene({
       mass: tennisMass,
       radius: TENNIS_RADIUS,
       position: vec(1, R + height + TENNIS_RADIUS),
-      velocity: ZERO,
+      velocity: vec(0, upSpeed),
     },
   ],
-  view: ({ height }) => {
-    const span = height + 2;
-    return { minX: -2, maxX: 2, minY: R - 0.15 * span, maxY: R + height + 0.35 * span };
+  view: ({ height, upSpeed }) => {
+    // Altura máxima de la subida: v² / 2g, con g ≈ 9,8 m/s².
+    const top = height + (upSpeed * upSpeed) / (2 * 9.8);
+    const span = top + 2;
+    return { minX: -2, maxX: 2, minY: R - 0.15 * span, maxY: R + top + 0.35 * span };
   },
 });
 
@@ -115,7 +122,7 @@ export const MOON_DISTANCE_KM = 384_400;
 
 const altura = defineScene({
   title: "Altura",
-  defaults: { altitude: 0.01 },
+  defaults: { altitude: 0.01, objectMass: 1 },
   params: [
     {
       key: "altitude",
@@ -131,13 +138,15 @@ const altura = defineScene({
         { value: MOON_DISTANCE_KM, label: "Luna" },
       ],
     },
+    { key: "objectMass", label: "Masa del objeto", unit: "kg", min: 0.01, max: 1000, scale: "log" },
   ],
-  buildBodies: ({ altitude }) => [
-    earth,
+  G: G_SI,
+  buildBodies: ({ altitude, objectMass }) => [
+    EARTH,
     {
       id: "objeto",
-      name: "Objeto de 1 kg",
-      mass: 1,
+      name: "Objeto",
+      mass: objectMass,
       radius: 0,
       position: vec(0, R + altitude * 1000),
       velocity: ZERO,
@@ -152,60 +161,67 @@ const altura = defineScene({
 });
 
 // ── 3. Lanzamiento (el cañón de Newton) ────────────────────────────────
-export const LAUNCH_ALTITUDE_KM = 500;
-
 const lanzamiento = defineScene({
   title: "Lanzamiento",
-  defaults: { speed: 3 },
-  params: [{ key: "speed", label: "Velocidad horizontal", unit: "km/s", min: 0, max: 12, scale: "linear" }],
+  defaults: { speed: 3, angle: 0, launchAltitude: 500 },
+  params: [
+    { key: "speed", label: "Velocidad", unit: "km/s", min: 0, max: 12, scale: "linear" },
+    { key: "angle", label: "Ángulo sobre la horizontal", unit: "°", min: -30, max: 60, scale: "linear" },
+    { key: "launchAltitude", label: "Altura de lanzamiento", unit: "km", min: 10, max: 2000, scale: "linear" },
+  ],
+  G: G_SI,
   run: {
     physics: { G: G_SI, dt: 1 },
     timeScale: 600,
     clock: { unit: "min", secondsPerUnit: 60 },
   },
-  buildBodies: ({ speed }) => [
-    earth,
+  buildBodies: ({ speed, angle, launchAltitude }) => [
+    EARTH,
     {
       id: "proyectil",
       name: "Proyectil",
       mass: 100,
       radius: 1,
-      position: vec(0, R + LAUNCH_ALTITUDE_KM * 1000),
-      velocity: vec(speed * 1000, 0),
+      position: vec(0, R + launchAltitude * 1000),
+      velocity: vec(speed * 1000 * Math.cos(angle * DEGREES), speed * 1000 * Math.sin(angle * DEGREES)),
     },
   ],
-  view: () => ({ minX: -2.2 * R, maxX: 2.2 * R, minY: -2.2 * R, maxY: 2.2 * R }),
+  view: () => ({ minX: -1.7 * R, maxX: 1.7 * R, minY: -1.7 * R, maxY: 1.7 * R }),
 });
 
 // ── 4. Tercer cuerpo (unidades abstractas, como la galería) ────────────
 const STAR_RADIUS = 0.05;
-/** Velocidad de una órbita circular de dos estrellas iguales separadas 1: √(G·m / 2d). */
-const BINARY_SPEED = Math.sqrt(0.5);
 
 const tercerCuerpo = defineScene({
   title: "Tercer cuerpo",
-  defaults: { thirdMass: 0 },
+  defaults: { thirdMass: 0, thirdDistance: 1.5, thirdSpeed: 0.4, starMass: 1 },
   params: [
     { key: "thirdMass", label: "Masa de la tercera estrella", unit: "", min: 0, max: 1, scale: "linear" },
+    { key: "thirdDistance", label: "Distancia de la tercera estrella", unit: "", min: 1, max: 3, scale: "linear" },
+    { key: "thirdSpeed", label: "Velocidad de la tercera estrella", unit: "", min: 0, max: 1, scale: "linear" },
+    { key: "starMass", label: "Masa de las estrellas A y B", unit: "", min: 0.2, max: 2, scale: "linear" },
   ],
+  G: 1,
   run: {
     physics: { G: 1, dt: 1e-3 },
     timeScale: 1,
     clock: { unit: "", secondsPerUnit: 1 },
   },
-  buildBodies: ({ thirdMass }) => {
+  buildBodies: ({ thirdMass, thirdDistance, thirdSpeed, starMass }) => {
+    // Órbita circular de dos estrellas iguales separadas 1: v = √(G·m / 2d).
+    const binarySpeed = Math.sqrt(starMass / 2);
     const binary: Body[] = [
-      { id: "a", name: "Estrella A", mass: 1, radius: STAR_RADIUS, position: vec(-0.5, 0), velocity: vec(0, -BINARY_SPEED) },
-      { id: "b", name: "Estrella B", mass: 1, radius: STAR_RADIUS, position: vec(0.5, 0), velocity: vec(0, BINARY_SPEED) },
+      { id: "a", name: "Estrella A", mass: starMass, radius: STAR_RADIUS, position: vec(-0.5, 0), velocity: vec(0, -binarySpeed) },
+      { id: "b", name: "Estrella B", mass: starMass, radius: STAR_RADIUS, position: vec(0.5, 0), velocity: vec(0, binarySpeed) },
     ];
     // Con masa 0 la tercera estrella no existe: ni siquiera como cuerpo de prueba.
     if (thirdMass <= 0) return binary;
     return [
       ...binary,
-      { id: "c", name: "Estrella C", mass: thirdMass, radius: STAR_RADIUS, position: vec(0, 1.5), velocity: vec(-0.4, 0) },
+      { id: "c", name: "Estrella C", mass: thirdMass, radius: STAR_RADIUS, position: vec(0, thirdDistance), velocity: vec(-thirdSpeed, 0) },
     ];
   },
-  view: () => ({ minX: -2, maxX: 2, minY: -2, maxY: 2 }),
+  view: () => ({ minX: -2.5, maxX: 2.5, minY: -2.5, maxY: 2.5 }),
 });
 
 export const SCENES = {
@@ -223,4 +239,15 @@ export const SCENE_ORDER: readonly SceneId[] = ["superficie", "altura", "lanzami
 /** Mantiene un valor dentro del rango de su control. */
 export function clampParam(spec: { readonly min: number; readonly max: number }, value: number): number {
   return Math.min(spec.max, Math.max(spec.min, value));
+}
+
+/**
+ * Una escena vista de forma genérica, con parámetros Record<string, number>.
+ * Los parámetros siempre vienen del store, que parte de los valores por
+ * defecto de la escena y valida cada cambio: su forma es la correcta.
+ */
+export function getScene(id: SceneId): SceneDefinition<Params> {
+  // TypeScript no puede comprobarlo por sí solo (keyof hace incompatibles los tipos
+  // genéricos); la forma de los parámetros la garantiza el store.
+  return SCENES[id] as unknown as SceneDefinition<Params>;
 }

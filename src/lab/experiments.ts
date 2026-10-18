@@ -62,7 +62,13 @@ export const EXPERIMENTS: Record<SceneId, Experiment> = {
       { id: "escapa", label: "Se escapa al espacio" },
     ],
     answer: "orbita",
-    check: [{ type: "setParam", key: "speed", value: 7.6 }, { type: "reset" }, { type: "play" }],
+    check: [
+      { type: "setParam", key: "speed", value: 7.6 },
+      { type: "setParam", key: "angle", value: 0 },
+      { type: "setParam", key: "launchAltitude", value: 500 },
+      { type: "reset" },
+      { type: "play" },
+    ],
     reveal: { on: "time", after: 30 * 60 },
     explanation:
       "Da vueltas sin llegar al suelo, aunque en realidad está cayendo todo el tiempo. Mientras cae, avanza tan deprisa que la superficie de la Tierra, que es curva, se aleja al mismo ritmo. Eso es una órbita, y por eso flotan los astronautas: ellos y la Estación caen juntos. Es la misma gravedad que hace caer una manzana y la que mantiene a la Luna girando. Prueba también con 2 km/s y con 12 km/s.",
@@ -77,7 +83,14 @@ export const EXPERIMENTS: Record<SceneId, Experiment> = {
       { id: "caos", label: "El movimiento se volverá imprevisible" },
     ],
     answer: "caos",
-    check: [{ type: "setParam", key: "thirdMass", value: 0.5 }, { type: "reset" }, { type: "play" }],
+    check: [
+      { type: "setParam", key: "thirdMass", value: 0.5 },
+      { type: "setParam", key: "thirdDistance", value: 1.5 },
+      { type: "setParam", key: "thirdSpeed", value: 0.4 },
+      { type: "setParam", key: "starMass", value: 1 },
+      { type: "reset" },
+      { type: "play" },
+    ],
     reveal: { on: "time", after: 10 },
     explanation:
       "Se vuelve imprevisible. Con dos cuerpos, la ley de Newton tiene una solución exacta y la órbita se repite para siempre. Con tres, cada estrella tira de las otras dos a la vez y no hay una fórmula general: un cambio diminuto en el punto de partida acaba en un movimiento completamente distinto. Aun así, existen configuraciones muy concretas en las que tres cuerpos repiten su recorrido. Puedes verlas en la galería.",

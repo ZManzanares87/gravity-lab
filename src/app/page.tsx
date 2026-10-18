@@ -1,20 +1,28 @@
-export default function Home() {
+import type { Metadata } from "next";
+import { LabCanvas } from "@/lab/components/LabCanvas";
+import { SceneNav } from "@/lab/components/SceneNav";
+
+export const metadata: Metadata = {
+  title: "Laboratorio",
+};
+
+export default function LabPage() {
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-16">
-      <h1 className="text-4xl font-bold">Gravity Lab</h1>
-      <p className="mt-4 text-lg text-ink-soft">
-        Página provisional para revisar la identidad visual: papel, tinta y los colores de los
-        tres cuerpos.
-      </p>
-      <ul className="mt-8 flex gap-6 text-lg font-bold">
-        <li className="text-body-a">Cuerpo A</li>
-        <li className="text-body-b">Cuerpo B</li>
-        <li className="text-body-c">Cuerpo C</li>
-      </ul>
-      <a href="#" className="mt-8 inline-block underline">
-        Enlace para probar el foco con Tab
-      </a>
-      <p className="mt-4 tabular-nums text-ink-soft">t = 1,43 s · F = 9,82 N</p>
+    <main className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
+      <h1 className="sr-only">Laboratorio de gravedad</h1>
+
+      {/* En móvil, la simulación va primero; en escritorio, en la columna central. */}
+      <section aria-label="Simulación" className="order-first lg:order-none lg:col-start-2">
+        <LabCanvas />
+      </section>
+
+      <aside aria-label="Experimentos" className="lg:col-start-1 lg:row-start-1">
+        <SceneNav />
+      </aside>
+
+      <aside aria-label="Tutor" className="border border-dashed border-ink/30 p-4 text-ink-soft">
+        El tutor llegará en el siguiente paso.
+      </aside>
     </main>
   );
 }
