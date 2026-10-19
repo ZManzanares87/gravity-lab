@@ -6,6 +6,7 @@ describe("store del laboratorio", () => {
   it("cargar una escena reinicia lo que depende de ella y conserva la sesión", () => {
     const store = createLabStore("superficie");
     store.getState().selectOption("a-la-vez");
+    store.getState().check();
     store.getState().reportContacts([{ bodyId: "bola", otherBodyId: "tierra", time: 1.4 }]);
 
     store.getState().dispatch({ type: "loadScene", scene: "lanzamiento" });
@@ -18,6 +19,18 @@ describe("store del laboratorio", () => {
     // Lo de la sesión sigue: la predicción y lo descubierto.
     expect(state.predictions).toEqual([{ scene: "superficie", option: "a-la-vez", correct: true }]);
     expect(state.discovered).toEqual(["masa"]);
+  });
+
+  it("reproducir sin comprobar no revela la explicación", () => {
+    const store = createLabStore("superficie");
+    store.getState().selectOption("a-la-vez");
+    store.getState().dispatch({ type: "play" });
+    store.getState().reportContacts([{ bodyId: "bola", otherBodyId: "tierra", time: 1.4 }]);
+
+    const state = store.getState();
+    expect(state.finished).toBe(true);
+    expect(state.revealed).toBe(false);
+    expect(state.predictions).toEqual([]);
   });
 
   it("cambiar un parámetro pausa y obliga a reconstruir la simulación", () => {

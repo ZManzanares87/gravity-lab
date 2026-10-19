@@ -2,70 +2,166 @@
 
 import Link from "next/link";
 import { EXPERIMENTS } from "../experiments";
+import { EXPERIMENT_TITLES } from "../journey";
+import { LAW_PARTS } from "../lawParts";
+import { SCENE_ORDER } from "../scenes";
 import { useLabStore } from "../store";
 
+const STEPS = ["Predice", "Mira", "Entiende"] as const;
+
+/**
+ * La guía del experimento en tres pasos. El paso no se guarda: se deduce
+ * del estado (revealed, checking), así nunca contradice a la simulación.
+ */
 export function ExperimentPanel() {
   const sceneId = useLabStore((state) => state.sceneId);
   const selectedOption = useLabStore((state) => state.selectedOption);
   const revealed = useLabStore((state) => state.revealed);
+  const checking = useLabStore((state) => state.checking);
   const selectOption = useLabStore((state) => state.selectOption);
   const check = useLabStore((state) => state.check);
+  const dispatch = useLabStore((state) => state.dispatch);
 
+  const step = revealed ? 2 : checking ? 1 : 0;
   const experiment = EXPERIMENTS[sceneId];
   const chosen = experiment.options.find((option) => option.id === selectedOption);
+  const part = LAW_PARTS.find((p) => p.id === experiment.discovers);
+  const next = SCENE_ORDER[SCENE_ORDER.indexOf(sceneId) + 1];
+
+  const goToNext = () => {
+    if (!next) return;
+    dispatch({ type: "loadScene", scene: next });
+    // El foco va al título del experimento nuevo: quien usa teclado o lector
+    // de pantalla empieza por arriba, no se queda al final de la guía.
+    document.getElementById("experimento-actual")?.focus();
+  };
 
   return (
-    <section aria-labelledby="experimento-titulo" className="space-y-4">
-      <h2 id="experimento-titulo" className="sr-only">
-        Pregunta del experimento
+    <section
+      aria-labelledby="guia-titulo"
+      className="flex flex-col gap-4 border border-ink bg-paper p-5"
+    >
+      <h2 id="guia-titulo" className="sr-only">
+        Guía del experimento
       </h2>
-      <fieldset disabled={revealed}>
-        <legend className="font-bold">{experiment.question}</legend>
-        <div className="mt-3 space-y-2">
-          {experiment.options.map((option) => (
-            <label key={option.id} className="flex items-start gap-2">
-              <input
-                type="radio"
-                name={`prediccion-${sceneId}`}
-                value={option.id}
-                checked={selectedOption === option.id}
-                onChange={() => selectOption(option.id)}
-                className="mt-1.5 accent-body-a"
-              />
-              {option.label}
-            </label>
-          ))}
-        </div>
+
+      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+        {STEPS.map((name, i) => (
+          <li
+            key={name}
+            aria-current={i === step ? "step" : undefined}
+            className={`inline-flex items-center gap-1.5 ${
+              i === step ? "font-bold text-body-a" : "text-ink-soft"
+            }`}
+          >
+            <span
+              aria-hidden="true"
+              className={`inline-flex size-6 items-center justify-center rounded-full ${
+                i === step ? "bg-body-a text-paper" : "border border-ink-soft"
+              }`}
+            >
+              {i < step ? "✓" : i + 1}
+            </span>
+            {name}
+            {i < STEPS.length - 1 && (
+              <span aria-hidden="true" className="ml-1 text-ink-soft">
+                →
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+
+      {/* Una vez comprobada, la predicción queda fija. */}
+      <fieldset disabled={step > 0} className="flex flex-col gap-2">
+        <legend className="mb-2 text-lg leading-snug font-bold">{experiment.question}</legend>
+        {experiment.options.map((option) => (
+          <label
+            key={option.id}
+            className="flex min-h-11 items-center gap-3 border border-ink/25 px-3 has-checked:border-body-a has-checked:bg-body-a/5"
+          >
+            <input
+              type="radio"
+              name={`prediccion-${sceneId}`}
+              value={option.id}
+              checked={selectedOption === option.id}
+              onChange={() => selectOption(option.id)}
+              className="size-4 accent-body-a"
+            />
+            {option.label}
+          </label>
+        ))}
       </fieldset>
 
-      {!revealed && (
-        <button
-          type="button"
-          onClick={check}
-          className="bg-body-a px-4 py-2 font-bold text-paper hover:bg-body-a/85"
-        >
-          Comprobar
-        </button>
+      {step === 0 && (
+        <>
+          <button
+            type="button"
+            onClick={check}
+            disabled={!selectedOption}
+            className="min-h-12 bg-body-a px-4 text-lg font-bold text-paper hover:bg-body-a/85 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Comprobar mi predicción
+          </button>
+          <p className="text-sm text-ink-soft">
+            {selectedOption
+              ? "Al comprobar, la simulación se reproduce sola."
+              : "Elige una opción para poder comprobarla."}
+          </p>
+        </>
+      )}
+
+      {step === 1 && (
+        <div className="flex flex-col gap-2">
+          <p className="font-bold">Mira la simulación…</p>
+          <p className="text-sm text-ink-soft">Cuando termine, aquí aparecerá la explicación.</p>
+          <button type="button" onClick={check} className="self-start underline underline-offset-4">
+            Empezar de nuevo
+          </button>
+        </div>
       )}
 
       {/* Los lectores de pantalla anuncian la explicación cuando aparece. */}
-      <div aria-live="polite">
-        {revealed && (
-          <div className="space-y-2 border-l-4 border-body-a pl-3">
-            {chosen && (
-              <p>
-                <strong>Tu predicción:</strong> {chosen.label}.
+      <div aria-live="polite" className="flex flex-col gap-4">
+        {step === 2 && (
+          <>
+            <div className="flex flex-col gap-1">
+              {chosen && <p className="text-sm text-ink-soft">Tu predicción: «{chosen.label}»</p>}
+              <p className="text-lg font-bold">
+                {!chosen
+                  ? "Esto es lo que ha pasado."
+                  : chosen.id === experiment.answer
+                    ? "¡Has acertado!"
+                    : "No era eso, y es de lo más normal."}
               </p>
+            </div>
+            <p>{experiment.explanation}</p>
+            {part && (
+              <div className="flex flex-col gap-1 border border-body-c bg-body-c/10 p-4">
+                <p className="text-sm font-bold">Nueva pieza de la ley: {part.symbol}</p>
+                <p>{part.text}</p>
+              </div>
             )}
-            <p>
-              <strong>Lo que ha pasado:</strong> {experiment.explanation}
-            </p>
-            {sceneId === "tercer-cuerpo" && (
-              <Link href="/galeria" className="inline-block underline underline-offset-4">
-                Ver la galería de los tres cuerpos
+            {next ? (
+              <button
+                type="button"
+                onClick={goToNext}
+                className="inline-flex min-h-12 items-center justify-center gap-2 bg-body-a px-4 font-bold text-paper hover:bg-body-a/85"
+              >
+                Siguiente: {EXPERIMENT_TITLES[next]}
+                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
+            ) : (
+              <Link
+                href="/galeria"
+                className="inline-flex min-h-12 items-center justify-center bg-body-a px-4 font-bold text-paper hover:bg-body-a/85"
+              >
+                Ver las órbitas de tres cuerpos
               </Link>
             )}
-          </div>
+          </>
         )}
       </div>
     </section>

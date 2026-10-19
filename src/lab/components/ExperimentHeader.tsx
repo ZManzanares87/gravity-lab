@@ -23,7 +23,7 @@ export function ExperimentHeader() {
             {index + 1} de {SCENE_ORDER.length}
           </strong>
         </p>
-        <h1 className="text-2xl leading-tight font-bold sm:text-3xl">
+        <h1 id="experimento-actual" tabIndex={-1} className="text-2xl leading-tight font-bold sm:text-3xl">
           {EXPERIMENT_TITLES[sceneId]}
         </h1>
         <nav aria-label="Experimentos">

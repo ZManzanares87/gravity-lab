@@ -30,6 +30,8 @@ export interface LabState {
   readonly selectedOption: string | null;
   /** La explicación de la escena actual está visible. */
   readonly revealed: boolean;
+  /** Pulsó "Comprobar" y la simulación está mostrando el resultado. */
+  readonly checking: boolean;
 
   // Lo que dura toda la sesión (no se reinicia al cambiar de escena).
   readonly predictions: readonly Prediction[];
@@ -56,6 +58,7 @@ function sceneState(sceneId: SceneId) {
     contacts: [] as readonly Contact[],
     selectedOption: null,
     revealed: false,
+    checking: false,
   };
 }
 
@@ -69,6 +72,7 @@ export function createLabStore(initialScene: SceneId = "superficie") {
       const part = experiment.discovers;
       set({
         revealed: true,
+        checking: false,
         predictions: selectedOption
           ? [...predictions, { scene: sceneId, option: selectedOption, correct: selectedOption === experiment.answer }]
           : predictions,
@@ -126,17 +130,19 @@ export function createLabStore(initialScene: SceneId = "superficie") {
         const { sceneId, dispatch } = get();
         const experiment = EXPERIMENTS[sceneId];
         experiment.check.forEach((action) => dispatch(action));
+        set({ checking: true });
         if (experiment.reveal.on === "check") reveal();
       },
 
       reportContacts: (contacts) => {
         set({ playing: false, finished: true, contacts });
-        if (EXPERIMENTS[get().sceneId].reveal.on !== "check") reveal();
+        // Solo revela si se llegó por "Comprobar": reproducir libremente no se salta la predicción.
+        if (get().checking && EXPERIMENTS[get().sceneId].reveal.on !== "check") reveal();
       },
 
       reportTime: (time) => {
         const { reveal: rule } = EXPERIMENTS[get().sceneId];
-        if (rule.on === "time" && time >= rule.after) reveal();
+        if (get().checking && rule.on === "time" && time >= rule.after) reveal();
       },
     };
   });
