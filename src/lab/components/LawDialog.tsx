@@ -38,9 +38,13 @@ export function LawDialog() {
       <button
         type="button"
         onClick={() => dialogRef.current?.showModal()}
-        className="border border-ink px-3 py-1.5 font-bold hover:bg-ink/5"
+        className="inline-flex min-h-11 items-center gap-2 border border-ink bg-paper px-4 font-bold hover:bg-ink/5"
       >
-        Ver la ley
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 5h11a4 4 0 0 1 4 4v10H8a4 4 0 0 1-4-4z" />
+          <path d="M8 9h7M8 13h5" />
+        </svg>
+        La ley · {discovered.length} de {PARTS.length} piezas
       </button>
 
       <dialog

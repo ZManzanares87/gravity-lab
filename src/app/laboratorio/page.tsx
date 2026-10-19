@@ -1,42 +1,48 @@
 import type { Metadata } from "next";
 import { DataPanel } from "@/lab/components/DataPanel";
+import { ExperimentHeader } from "@/lab/components/ExperimentHeader";
 import { ExperimentPanel } from "@/lab/components/ExperimentPanel";
 import { LabCanvas } from "@/lab/components/LabCanvas";
 import { LabChart } from "@/lab/components/LabChart";
-import { LawDialog } from "@/lab/components/LawDialog";
 import { ParamControls } from "@/lab/components/ParamControls";
-import { SceneNav } from "@/lab/components/SceneNav";
 import { TutorPanel } from "@/tutor/components/TutorPanel";
+import { Disclosure } from "@/ui/Disclosure";
 
 export const metadata: Metadata = {
   title: "Laboratorio",
 };
 
+/**
+ * Escritorio: simulación y plegables a la izquierda; guía y tutor a la derecha.
+ * Móvil: cabecera, simulación, guía, plegables. El lateral ocupa dos filas en
+ * escritorio para que el mismo HTML se ordene distinto en cada tamaño.
+ */
 export default function LabPage() {
   return (
-    <main className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-6 grid-cols-[minmax(0,1fr)] lg:grid-cols-[280px_minmax(0,1fr)_300px] lg:items-start">
-      <h1 className="sr-only">Laboratorio de gravedad</h1>
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6">
+      <ExperimentHeader />
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-[auto_1fr] lg:items-start">
+        <section aria-label="Simulación" className="lg:col-start-1 lg:row-start-1">
+          <LabCanvas />
+        </section>
 
-      {/* En móvil, la simulación va primero; en escritorio, en la columna central. */}
-      <section aria-label="Simulación" className="order-first lg:order-none lg:col-start-2 lg:row-start-1">
-        <LabCanvas />
-        <LabChart />
-        <DataPanel />
-      </section>
+        <div className="flex flex-col gap-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <ExperimentPanel />
+          <aside aria-label="Tutor" className="border border-ink/20 bg-paper p-4">
+            <TutorPanel />
+          </aside>
+        </div>
 
-      <div className="space-y-8 lg:col-start-1 lg:row-start-1">
-        <SceneNav />
-        <LawDialog />
-        <ExperimentPanel />
-        <ParamControls />
+        <div className="flex flex-col gap-3 lg:col-start-1 lg:row-start-2">
+          <Disclosure title="Experimenta tú" hint="cambia los valores del experimento">
+            <ParamControls />
+          </Disclosure>
+          <Disclosure title="Datos avanzados" hint="gráfica, tabla y fórmula">
+            <LabChart />
+            <DataPanel />
+          </Disclosure>
+        </div>
       </div>
-
-      <aside
-        aria-label="Tutor"
-        className="border border-ink/20 bg-paper p-4 lg:col-start-3 lg:row-start-1"
-      >
-        <TutorPanel />
-      </aside>
     </main>
   );
 }
