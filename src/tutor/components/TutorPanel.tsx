@@ -19,9 +19,9 @@ import { describeActions } from "../describeActions";
 import { useTutorDock } from "../dockStore";
 import { TUTOR_TOOLS, type ProposeExperimentInput, type ProposeExperimentOutput } from "../tools";
 
-/** Un mensaje enviado por la app, no escrito por la persona: tras una predicción fallida. */
+/** Un mensaje enviado por la app, no escrito por la persona: tras cada predicción. */
 interface TutorMetadata {
-  readonly auto?: { readonly chosen: string };
+  readonly auto?: { readonly chosen: string; readonly correct: boolean };
 }
 
 type TutorMessage = UIMessage<TutorMetadata, UIDataTypes, InferUITools<typeof TUTOR_TOOLS>>;
@@ -76,7 +76,7 @@ export function TutorPanel() {
   const [input, setInput] = useState("");
   const [announcement, setAnnouncement] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
-  // Cuántas predicciones se han procesado ya: cada fallo dispara una sola vez.
+  // Cuántas predicciones se han procesado ya: cada una dispara una sola vez.
   const seen = useRef(predictions.length);
 
   // El contexto se calcula en el momento de cada envío: siempre es el estado actual.
@@ -93,8 +93,8 @@ export function TutorPanel() {
     messages: [GREETING],
     // Cuando la persona responde a una propuesta, la conversación sigue sola.
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-    // Se anuncia la respuesta completa, no cada trocito mientras llega.
     onFinish: ({ message }) => {
+      // Se anuncia la respuesta completa, no cada trocito mientras llega.
       setAnnouncement(textOf(message));
       // Con el panel cerrado, el botón avisa de que hay una respuesta nueva.
       if (!useTutorDock.getState().open) useTutorDock.getState().markUnread();
@@ -106,8 +106,9 @@ export function TutorPanel() {
     message.parts.some((part) => part.type === "tool-proponerExperimento" && part.state === "input-available"),
   );
 
-  // Si la persona falla una predicción, el tutor interviene sin que se lo pidan:
-  // explica el error desde la idea que tenía y propone cómo comprobarlo.
+  // Tras cada predicción, el tutor interviene sin que se lo pidan. Si falló,
+  // explica desde la idea que tenía; si acertó, sube el nivel con un reto.
+  // El marcador va en el mensaje para que el tutor ajuste la dificultad.
   useEffect(() => {
     if (predictions.length <= seen.current) {
       seen.current = predictions.length;
@@ -115,14 +116,20 @@ export function TutorPanel() {
     }
     seen.current = predictions.length;
     const latest = predictions.at(-1);
-    if (!latest || latest.correct || busy || pendingProposal) return;
+    if (!latest || busy || pendingProposal) return;
 
     const experiment = EXPERIMENTS[latest.scene];
     const labelOf = (id: string) => experiment.options.find((option) => option.id === id)?.label ?? id;
     const chosen = labelOf(latest.option);
+    const title = EXPERIMENT_TITLES[latest.scene];
+    const hits = predictions.filter((prediction) => prediction.correct).length;
+    const score = `Llevo ${hits} aciertos de ${predictions.length} predicciones.`;
+
     void sendMessage({
-      text: `En el experimento «${EXPERIMENT_TITLES[latest.scene]}» predije «${chosen}», pero la respuesta era «${labelOf(experiment.answer)}». Ayúdame a entender mi error.`,
-      metadata: { auto: { chosen } },
+      text: latest.correct
+        ? `En el experimento «${title}» predije «${chosen}» y acerté. ${score} Ponme un reto un poco más difícil sobre esto.`
+        : `En el experimento «${title}» predije «${chosen}», pero la respuesta era «${labelOf(experiment.answer)}». ${score} Ayúdame a entender mi error.`,
+      metadata: { auto: { chosen, correct: latest.correct } },
     });
   }, [predictions, busy, pendingProposal, sendMessage]);
 
@@ -160,7 +167,9 @@ export function TutorPanel() {
           if (message.role === "user" && auto) {
             return (
               <p key={message.id} className="border-t border-ink/20 pt-3 text-sm text-ink-soft">
-                Has predicho «{auto.chosen}». El tutor te lo explica:
+                {auto.correct
+                  ? `Has acertado con «${auto.chosen}». El tutor te propone un reto:`
+                  : `Has predicho «${auto.chosen}». El tutor te lo explica:`}
               </p>
             );
           }
