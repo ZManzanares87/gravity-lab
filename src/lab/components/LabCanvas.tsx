@@ -4,8 +4,11 @@ import { useEffect, useRef } from "react";
 import type { Body, SimState, Vec2 } from "@/physics/types";
 import { SimulationRunner } from "@/simulation/runner";
 import { formatNumber } from "../format";
+import { setLiveState } from "../liveState";
+import { drawMeasureLines } from "../measureLines";
 import { getScene } from "../scenes";
 import { useLabStore } from "../store";
+import { ContactMessage } from "./ContactMessage";
 import { PlaybackControls } from "./PlaybackControls";
 
 const MOVING_COLOR_VARS = ["--color-body-a", "--color-body-b", "--color-body-c"] as const;
@@ -57,6 +60,7 @@ export function LabCanvas() {
     let lastClockUpdate = 0;
 
     const record = (state: SimState) => {
+      setLiveState(state);
       state.bodies.forEach((body) => {
         if (body.id === "tierra") return;
         const trail = trails.get(body.id);
@@ -88,6 +92,15 @@ export function LabCanvas() {
         x: width / 2 + (p.x - centerX) * scale,
         y: height / 2 - (p.y - centerY) * scale,
       });
+
+      /** Etiqueta a la derecha de los cuerpos de la derecha y a la izquierda de los de la izquierda. */
+      const drawLabel = (text: string, x: number, y: number, gap: number) => {
+        const onRight = x >= width / 2;
+        context.textAlign = onRight ? "left" : "right";
+        context.fillStyle = ink;
+        context.fillText(text, onRight ? x + gap : x - gap, y - gap);
+        context.textAlign = "left";
+      };
 
       /** Dibuja un cuerpo enorme como un semiplano: su superficie vista de cerca. */
       const drawGround = (body: Body) => {
@@ -139,13 +152,14 @@ export function LabCanvas() {
             context.strokeStyle = ink;
             context.stroke();
             context.fillStyle = ink;
-            context.fillText(body.name, center.x - 20, center.y + 5);
+            context.textAlign = "center";
+            context.fillText(body.name, center.x, center.y + 5);
+            context.textAlign = "left";
             return;
           }
           context.fillStyle = color;
           context.fill();
-          context.fillStyle = ink;
-          context.fillText(body.name, center.x + radius + 6, center.y - radius - 4);
+          drawLabel(body.name, center.x, center.y, radius + 6);
           return;
         }
 
@@ -155,8 +169,7 @@ export function LabCanvas() {
         context.lineWidth = 2.5;
         context.strokeStyle = color;
         context.stroke();
-        context.fillStyle = ink;
-        context.fillText(`${body.name} (no a escala)`, center.x + 10, center.y - 10);
+        drawLabel(`${body.name} (no a escala)`, center.x, center.y, 10);
       };
 
       // 1. Las estelas: el camino recorrido desde el inicio.
@@ -173,6 +186,12 @@ export function LabCanvas() {
         context.stroke();
       });
       context.globalAlpha = 1;
+
+      // Línea de cota: altura sobre el suelo o distancia al centro (la r de la fórmula).
+      drawMeasureLines(
+        { context, toScreen, scale, width, ink, fontFamily, flatThresholdPx: FLAT_GROUND_RADIUS_PX },
+        state.bodies,
+      );
 
       // 2. Los cuerpos, con su nombre al lado.
       context.font = `700 14px ${fontFamily}`;
@@ -249,6 +268,7 @@ export function LabCanvas() {
         <PlaybackControls />
         <output ref={clockRef} className="ml-auto tabular-nums text-ink-soft" />
       </div>
+      <ContactMessage />
     </div>
   );
 }

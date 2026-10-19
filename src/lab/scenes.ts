@@ -73,6 +73,14 @@ export const EARTH: Body = {
 const BOWLING_RADIUS = 0.11;
 const TENNIS_RADIUS = 0.033;
 
+/**
+ * Distancia horizontal de cada bola al centro. Crece con la altura: si fuera
+ * fija, a 100 m la escala sería tan pequeña que las dos bolas se pisarían.
+ */
+function ballOffset(height: number): number {
+  return 0.5 + 0.1 * height;
+}
+
 const superficie = defineScene({
   title: "Superficie",
   defaults: { height: 10, bowlingMass: 7, tennisMass: 0.058, upSpeed: 0 },
@@ -97,7 +105,7 @@ const superficie = defineScene({
       name: "Bola de bolos",
       mass: bowlingMass,
       radius: BOWLING_RADIUS,
-      position: vec(-1, R + height + BOWLING_RADIUS),
+      position: vec(-ballOffset(height), R + height + BOWLING_RADIUS),
       velocity: vec(0, upSpeed),
     },
     {
@@ -105,7 +113,7 @@ const superficie = defineScene({
       name: "Pelota de tenis",
       mass: tennisMass,
       radius: TENNIS_RADIUS,
-      position: vec(1, R + height + TENNIS_RADIUS),
+      position: vec(ballOffset(height), R + height + TENNIS_RADIUS),
       velocity: vec(0, upSpeed),
     },
   ],
@@ -113,7 +121,8 @@ const superficie = defineScene({
     // Altura máxima de la subida: v² / 2g, con g ≈ 9,8 m/s².
     const top = height + (upSpeed * upSpeed) / (2 * 9.8);
     const span = top + 2;
-    return { minX: -2, maxX: 2, minY: R - 0.15 * span, maxY: R + top + 0.35 * span };
+    const half = ballOffset(height) + 1;
+    return { minX: -half, maxX: half, minY: R - 0.15 * span, maxY: R + top + 0.35 * span };
   },
 });
 
@@ -161,6 +170,26 @@ const altura = defineScene({
 });
 
 // ── 3. Lanzamiento (el cañón de Newton) ────────────────────────────────
+
+/**
+ * Medio lado de la vista: lo justo para que quepa la órbita entera.
+ * Con la energía y el momento angular del lanzamiento se calcula el punto
+ * más alejado de la elipse (el apogeo), sin tener que simular nada.
+ */
+export function launchExtent({ speed, angle, launchAltitude }: Params): number {
+  const mu = G_SI * EARTH_MASS;
+  const r0 = R + (launchAltitude ?? 0) * 1000;
+  const v = (speed ?? 0) * 1000;
+  const energy = (v * v) / 2 - mu / r0;
+  // Energía positiva: el proyectil escapa. Se ve cómo se aleja.
+  if (energy >= 0) return 4 * R;
+  const semiMajorAxis = -mu / (2 * energy);
+  const angularMomentum = r0 * v * Math.cos((angle ?? 0) * DEGREES);
+  const eccentricity = Math.sqrt(Math.max(0, 1 + (2 * energy * angularMomentum ** 2) / mu ** 2));
+  const apoapsis = semiMajorAxis * (1 + eccentricity);
+  return Math.min(6 * R, Math.max(1.3 * R, 1.1 * apoapsis));
+}
+
 const lanzamiento = defineScene({
   title: "Lanzamiento",
   defaults: { speed: 3, angle: 0, launchAltitude: 500 },
@@ -186,7 +215,10 @@ const lanzamiento = defineScene({
       velocity: vec(speed * 1000 * Math.cos(angle * DEGREES), speed * 1000 * Math.sin(angle * DEGREES)),
     },
   ],
-  view: () => ({ minX: -1.7 * R, maxX: 1.7 * R, minY: -1.7 * R, maxY: 1.7 * R }),
+  view: (params) => {
+    const extent = launchExtent(params);
+    return { minX: -extent, maxX: extent, minY: -extent, maxY: extent };
+  },
 });
 
 // ── 4. Tercer cuerpo (unidades abstractas, como la galería) ────────────

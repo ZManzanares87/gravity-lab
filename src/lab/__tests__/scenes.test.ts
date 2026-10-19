@@ -66,3 +66,21 @@ describe("escenas del laboratorio", () => {
     expect(scene.buildBodies({ ...scene.defaults, thirdMass: 0.5 })).toHaveLength(3);
   });
 });
+
+describe("vista de Lanzamiento", () => {
+  it("la órbita elíptica de la captura (7,86 km/s, −7,77°) cabe entera en la vista", () => {
+    const scene = SCENES.lanzamiento;
+    const params = { speed: 7.86, angle: -7.77, launchAltitude: 500 };
+    const extent = scene.view(params).maxX;
+
+    // Simulamos 4 horas (más de dos vueltas) y medimos la distancia máxima al centro.
+    let simulation = createSimulation(scene.buildBodies(params), scene.run!.physics);
+    let farthest = 0;
+    for (let minute = 0; minute < 240; minute++) {
+      simulation = advance(simulation, 60).simulation;
+      const [earth, projectile] = snapshot(simulation).bodies;
+      farthest = Math.max(farthest, length(sub(projectile!.position, earth!.position)));
+    }
+    expect(farthest).toBeLessThan(extent);
+  });
+});
