@@ -5,6 +5,42 @@ import { useLabStore } from "../store";
 
 const SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
 
+const ICON_PROPS = {
+  "aria-hidden": true,
+  width: 20,
+  height: 20,
+  viewBox: "0 0 24 24",
+} as const;
+
+function PlayIcon() {
+  return (
+    <svg {...ICON_PROPS} fill="currentColor">
+      <path d="M7 4.5v15l13-7.5z" />
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg {...ICON_PROPS} fill="currentColor">
+      <path d="M6 4.5h4v15H6zM14 4.5h4v15h-4z" />
+    </svg>
+  );
+}
+
+function RestartIcon() {
+  return (
+    <svg {...ICON_PROPS} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 12a8 8 0 1 0 2.4-5.7" />
+      <path d="M4 4v5h5" />
+    </svg>
+  );
+}
+
+/**
+ * Icono y texto en pantallas medianas; solo icono en móvil. El texto sigue
+ * en el HTML (sr-only), así el lector de pantalla siempre dice lo mismo que se ve.
+ */
 export function PlaybackControls() {
   const sceneId = useLabStore((state) => state.sceneId);
   const playing = useLabStore((state) => state.playing);
@@ -21,30 +57,36 @@ export function PlaybackControls() {
     );
   }
 
-  const label = finished ? "Repetir experimento" : playing ? "Pausar" : "Reproducir";
+  const main = finished
+    ? { label: "Repetir", icon: <RestartIcon /> }
+    : playing
+      ? { label: "Pausar", icon: <PauseIcon /> }
+      : { label: "Reproducir", icon: <PlayIcon /> };
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
       <button
         type="button"
         onClick={() => dispatch({ type: playing ? "pause" : "play" })}
-        className="min-w-32 bg-ink px-4 py-2 font-bold text-paper hover:bg-ink/85"
+        className="inline-flex min-h-12 min-w-12 items-center justify-center gap-2 bg-ink px-3 font-bold text-paper hover:bg-ink/85 sm:min-w-36 sm:px-5"
       >
-        {label}
+        {main.icon}
+        <span className="sr-only sm:not-sr-only">{main.label}</span>
       </button>
       <button
         type="button"
         onClick={() => dispatch({ type: "reset" })}
-        className="border border-ink px-4 py-2 font-bold hover:bg-ink/5"
+        className="inline-flex min-h-12 min-w-12 items-center justify-center gap-2 border border-ink bg-paper px-3 hover:bg-ink/5 sm:px-4"
       >
-        Reiniciar
+        <RestartIcon />
+        <span className="sr-only sm:not-sr-only">Reiniciar</span>
       </button>
-      <label className="flex items-center gap-2">
-        Velocidad
+      <label className="inline-flex items-center gap-2 text-ink-soft">
+        <span className="sr-only sm:not-sr-only">Velocidad</span>
         <select
           value={speed}
           onChange={(event) => setSpeed(Number(event.target.value))}
-          className="border border-ink/40 bg-paper px-2 py-2"
+          className="min-h-12 border border-ink/40 bg-paper px-2 text-ink"
         >
           {SPEEDS.map((value) => (
             <option key={value} value={value}>
