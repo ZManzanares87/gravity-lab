@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function LabPage() {
   return (
-    <main className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-6 lg:grid-cols-[280px_minmax(0,1fr)_300px] lg:items-start">
+    <main className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-6 grid-cols-[minmax(0,1fr)] lg:grid-cols-[280px_minmax(0,1fr)_300px] lg:items-start">
       <h1 className="sr-only">Laboratorio de gravedad</h1>
 
       {/* En móvil, la simulación va primero; en escritorio, en la columna central. */}
