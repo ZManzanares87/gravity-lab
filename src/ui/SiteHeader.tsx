@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/", label: "Laboratorio" },
+  { href: "/laboratorio", label: "Laboratorio" },
   { href: "/galeria", label: "Galería" },
 ] as const;
 
 /** Una ruta está activa si es la misma o una subpágina (/galeria/lagrange → Galería). */
 function isActive(pathname: string, href: string): boolean {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  return pathname.startsWith(href);
 }
 
 export function SiteHeader() {
@@ -22,7 +22,14 @@ export function SiteHeader() {
         aria-label="Principal"
         className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3"
       >
-        <span className="mr-auto text-lg font-bold">Gravity Lab</span>
+        {/* El nombre lleva a la bienvenida, como se espera en cualquier web. */}
+        <Link
+          href="/"
+          aria-current={pathname === "/" ? "page" : undefined}
+          className="mr-auto text-lg font-bold"
+        >
+          Gravity Lab
+        </Link>
         {LINKS.map(({ href, label }) => {
           const active = isActive(pathname, href);
           return (
