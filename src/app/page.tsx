@@ -5,6 +5,7 @@ import { LabCanvas } from "@/lab/components/LabCanvas";
 import { LawDialog } from "@/lab/components/LawDialog";
 import { ParamControls } from "@/lab/components/ParamControls";
 import { SceneNav } from "@/lab/components/SceneNav";
+import { TutorPanel } from "@/tutor/components/TutorPanel";
 
 export const metadata: Metadata = {
   title: "Laboratorio",
@@ -30,9 +31,9 @@ export default function LabPage() {
 
       <aside
         aria-label="Tutor"
-        className="border border-dashed border-ink/30 p-4 text-ink-soft lg:col-start-3 lg:row-start-1"
+        className="border border-ink/20 bg-paper p-4 lg:col-start-3 lg:row-start-1"
       >
-        El tutor llegará en el siguiente paso.
+        <TutorPanel />
       </aside>
     </main>
   );

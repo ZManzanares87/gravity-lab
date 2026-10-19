@@ -39,6 +39,14 @@ export function buildLabContext(lab: LabSnapshot, live: SimState | null): string
     );
   });
 
+  lines.push("Controles de otras escenas (antes, usa loadScene):");
+  SCENE_ORDER.filter((id) => id !== lab.sceneId).forEach((id) => {
+    const keys = getScene(id).params.map(
+      (spec) => `${spec.key} (${formatNumber(spec.min)}–${formatNumber(spec.max)}${spec.unit ? ` ${spec.unit}` : ""})`,
+    );
+    lines.push(`- ${id}: ${keys.join(", ")}.`);
+  });
+
   const status = !scene.run
     ? "medidor sin animación"
     : lab.finished

@@ -36,12 +36,23 @@ export function measure(bodies: readonly Body[], G: number, centralId = "tierra"
         id: body.id,
         name: body.name,
         mass: body.mass,
-        altitude: central ? distance - central.radius - body.radius : null,
+        altitude: central ? withoutNoise(distance - central.radius - body.radius) : null,
         distance,
-        speed: length(body.velocity),
+        speed: withoutNoise(length(body.velocity)),
         acceleration,
         force: body.mass * acceleration,
       },
     ];
   });
+}
+
+/**
+ * Los ordenadores calculan con precisión limitada: tras un contacto quedan
+ * restos como −0,000000000931 m. Por debajo de una micra (o de una micra
+ * por segundo), el valor es ruido numérico y se muestra como 0.
+ */
+const NUMERICAL_NOISE = 1e-6;
+
+function withoutNoise(value: number): number {
+  return Math.abs(value) < NUMERICAL_NOISE ? 0 : value;
 }

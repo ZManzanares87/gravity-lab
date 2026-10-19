@@ -25,6 +25,8 @@ describe("contexto del tutor", () => {
     expect(context).toContain("Escena actual: Lanzamiento");
     expect(context).toContain("- speed (\"Velocidad\")");
     expect(context).toContain("de 0 a 12 km/s");
+    // También los de las otras escenas, para que no tenga que adivinarlos.
+    expect(context).toContain("- superficie: height (1–100 m)");
   });
 
   it("incluye las medidas del motor, la predicción y el historial", () => {

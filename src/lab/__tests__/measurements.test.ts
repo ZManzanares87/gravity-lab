@@ -28,3 +28,17 @@ describe("medidas", () => {
     expect(station!.force / ground!.force).toBeCloseTo(0.885, 2);
   });
 });
+
+describe("medidas tras un contacto", () => {
+  it("la altura y la velocidad de un cuerpo apoyado son exactamente 0, sin ruido numérico", async () => {
+    const { advance, createSimulation, snapshot } = await import("@/physics/simulation");
+    const scene = SCENES.lanzamiento;
+    const params = { speed: 3, angle: 0, launchAltitude: 500 };
+    const { simulation, contacts } = advance(createSimulation(scene.buildBodies(params), scene.run!.physics), 3600);
+    expect(contacts).toHaveLength(1);
+
+    const [projectile] = measure(snapshot(simulation).bodies, scene.G);
+    expect(projectile!.altitude).toBe(0);
+    expect(projectile!.speed).toBe(0);
+  });
+});

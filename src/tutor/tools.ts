@@ -25,13 +25,14 @@ export const proposeExperimentInput = z.object({
     .describe("Acciones en orden. Usa loadScene antes de cambiar parámetros de otra escena."),
 });
 
-export type ProposeExperimentInput = z.infer<typeof proposeExperimentInput>;
-
 /** Lo que recibe el modelo cuando la persona responde a una propuesta. */
-export interface ProposeExperimentOutput {
-  readonly accepted: boolean;
-  readonly detail: string;
-}
+export const proposeExperimentOutput = z.object({
+  accepted: z.boolean(),
+  detail: z.string(),
+});
+
+export type ProposeExperimentInput = z.infer<typeof proposeExperimentInput>;
+export type ProposeExperimentOutput = z.infer<typeof proposeExperimentOutput>;
 
 /**
  * Sin "execute": es una herramienta de cliente. El servidor no la ejecuta,
@@ -43,5 +44,6 @@ export const TUTOR_TOOLS = {
     description:
       "Propone cambiar el laboratorio (escena, parámetros, reproducir...) para que la persona observe algo. La persona decide si acepta; no supongas el resultado hasta recibir la respuesta.",
     inputSchema: proposeExperimentInput,
+    outputSchema: proposeExperimentOutput,
   }),
 };
