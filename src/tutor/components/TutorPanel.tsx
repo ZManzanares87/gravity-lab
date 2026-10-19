@@ -9,14 +9,22 @@ import {
   type UIMessage,
 } from "ai";
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import { EXPERIMENTS } from "@/lab/experiments";
+import { EXPERIMENT_TITLES } from "@/lab/journey";
 import { getLiveState } from "@/lab/liveState";
 import type { SceneId } from "@/lab/scenes";
 import { useLabStore } from "@/lab/store";
 import { buildLabContext } from "../context";
 import { describeActions } from "../describeActions";
+import { useTutorDock } from "../dockStore";
 import { TUTOR_TOOLS, type ProposeExperimentInput, type ProposeExperimentOutput } from "../tools";
 
-type TutorMessage = UIMessage<unknown, UIDataTypes, InferUITools<typeof TUTOR_TOOLS>>;
+/** Un mensaje enviado por la app, no escrito por la persona: tras una predicción fallida. */
+interface TutorMetadata {
+  readonly auto?: { readonly chosen: string };
+}
+
+type TutorMessage = UIMessage<TutorMetadata, UIDataTypes, InferUITools<typeof TUTOR_TOOLS>>;
 type ProposalPart = Extract<TutorMessage["parts"][number], { type: "tool-proponerExperimento" }>;
 
 /** Saludo fijo: aparece al instante, no cuesta nada y funciona también sin clave. */
@@ -64,9 +72,12 @@ function errorText(error: Error): string {
 
 export function TutorPanel() {
   const sceneId = useLabStore((state) => state.sceneId);
+  const predictions = useLabStore((state) => state.predictions);
   const [input, setInput] = useState("");
   const [announcement, setAnnouncement] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
+  // Cuántas predicciones se han procesado ya: cada fallo dispara una sola vez.
+  const seen = useRef(predictions.length);
 
   // El contexto se calcula en el momento de cada envío: siempre es el estado actual.
   const [transport] = useState(
@@ -83,13 +94,37 @@ export function TutorPanel() {
     // Cuando la persona responde a una propuesta, la conversación sigue sola.
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     // Se anuncia la respuesta completa, no cada trocito mientras llega.
-    onFinish: ({ message }) => setAnnouncement(textOf(message)),
+    onFinish: ({ message }) => {
+      setAnnouncement(textOf(message));
+      // Con el panel cerrado, el botón avisa de que hay una respuesta nueva.
+      if (!useTutorDock.getState().open) useTutorDock.getState().markUnread();
+    },
   });
 
   const busy = status === "submitted" || status === "streaming";
   const pendingProposal = messages.some((message) =>
     message.parts.some((part) => part.type === "tool-proponerExperimento" && part.state === "input-available"),
   );
+
+  // Si la persona falla una predicción, el tutor interviene sin que se lo pidan:
+  // explica el error desde la idea que tenía y propone cómo comprobarlo.
+  useEffect(() => {
+    if (predictions.length <= seen.current) {
+      seen.current = predictions.length;
+      return;
+    }
+    seen.current = predictions.length;
+    const latest = predictions.at(-1);
+    if (!latest || latest.correct || busy || pendingProposal) return;
+
+    const experiment = EXPERIMENTS[latest.scene];
+    const labelOf = (id: string) => experiment.options.find((option) => option.id === id)?.label ?? id;
+    const chosen = labelOf(latest.option);
+    void sendMessage({
+      text: `En el experimento «${EXPERIMENT_TITLES[latest.scene]}» predije «${chosen}», pero la respuesta era «${labelOf(experiment.answer)}». Ayúdame a entender mi error.`,
+      metadata: { auto: { chosen } },
+    });
+  }, [predictions, busy, pendingProposal, sendMessage]);
 
   useEffect(() => {
     const list = listRef.current;
@@ -118,25 +153,36 @@ export function TutorPanel() {
         Tutor
       </h2>
 
-      <div ref={listRef} className="mt-3 max-h-[60vh] min-h-48 space-y-4 overflow-y-auto pr-1">
-        {messages.map((message) => (
-          <div key={message.id} className={message.role === "user" ? "ml-6 bg-ink/5 p-3" : ""}>
-            <p className="text-sm font-bold text-ink-soft">{message.role === "user" ? "Tú" : "Tutor"}</p>
-            {message.parts.map((part, index) => {
-              if (part.type === "text") {
-                return (
-                  <p key={index} className="whitespace-pre-wrap">
-                    {part.text}
-                  </p>
-                );
-              }
-              if (part.type === "tool-proponerExperimento") {
-                return <Proposal key={part.toolCallId} part={part} sceneId={sceneId} onAnswer={answer} />;
-              }
-              return null;
-            })}
-          </div>
-        ))}
+      <div ref={listRef} className="mt-3 max-h-[50vh] min-h-48 space-y-4 overflow-y-auto pr-1">
+        {messages.map((message) => {
+          // Un mensaje automático se muestra como aviso, no como si lo hubiera escrito la persona.
+          const auto = message.metadata?.auto;
+          if (message.role === "user" && auto) {
+            return (
+              <p key={message.id} className="border-t border-ink/20 pt-3 text-sm text-ink-soft">
+                Has predicho «{auto.chosen}». El tutor te lo explica:
+              </p>
+            );
+          }
+          return (
+            <div key={message.id} className={message.role === "user" ? "ml-6 bg-ink/5 p-3" : ""}>
+              <p className="text-sm font-bold text-ink-soft">{message.role === "user" ? "Tú" : "Tutor"}</p>
+              {message.parts.map((part, index) => {
+                if (part.type === "text") {
+                  return (
+                    <p key={index} className="whitespace-pre-wrap">
+                      {part.text}
+                    </p>
+                  );
+                }
+                if (part.type === "tool-proponerExperimento") {
+                  return <Proposal key={part.toolCallId} part={part} sceneId={sceneId} onAnswer={answer} />;
+                }
+                return null;
+              })}
+            </div>
+          );
+        })}
         {status === "submitted" && <p className="text-ink-soft">El tutor está pensando…</p>}
       </div>
 
