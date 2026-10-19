@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DataPanel } from "@/lab/components/DataPanel";
 import { ExperimentPanel } from "@/lab/components/ExperimentPanel";
 import { LabCanvas } from "@/lab/components/LabCanvas";
+import { LabChart } from "@/lab/components/LabChart";
 import { LawDialog } from "@/lab/components/LawDialog";
 import { ParamControls } from "@/lab/components/ParamControls";
 import { SceneNav } from "@/lab/components/SceneNav";
@@ -19,6 +20,7 @@ export default function LabPage() {
       {/* En móvil, la simulación va primero; en escritorio, en la columna central. */}
       <section aria-label="Simulación" className="order-first lg:order-none lg:col-start-2 lg:row-start-1">
         <LabCanvas />
+        <LabChart />
         <DataPanel />
       </section>
 

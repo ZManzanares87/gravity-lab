@@ -248,9 +248,19 @@ export function LabCanvas() {
   useEffect(() => {
     const runner = runnerRef.current;
     if (!runner) return;
-    if (playing) runner.play();
-    else runner.pause();
-  }, [playing]);
+    if (playing) {
+      runner.play();
+      return;
+    }
+    runner.pause();
+    // En pausa (también tras un contacto), el reloj muestra el tiempo exacto,
+    // aunque el último fotograma cayera entre dos actualizaciones del texto.
+    const clock = getScene(sceneId).run?.clock;
+    if (clock && clockRef.current) {
+      const value = formatNumber(runner.state.time / clock.secondsPerUnit, 3);
+      clockRef.current.textContent = `t = ${value}${clock.unit ? ` ${clock.unit}` : ""}`;
+    }
+  }, [playing, sceneId]);
 
   useEffect(() => {
     runnerRef.current?.setSpeed(speed);
