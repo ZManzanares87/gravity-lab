@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DataPanel } from "@/lab/components/DataPanel";
 import { ExperimentPanel } from "@/lab/components/ExperimentPanel";
 import { LabCanvas } from "@/lab/components/LabCanvas";
+import { LawDialog } from "@/lab/components/LawDialog";
 import { ParamControls } from "@/lab/components/ParamControls";
 import { SceneNav } from "@/lab/components/SceneNav";
 
@@ -22,6 +23,7 @@ export default function LabPage() {
 
       <div className="space-y-8 lg:col-start-1 lg:row-start-1">
         <SceneNav />
+        <LawDialog />
         <ExperimentPanel />
         <ParamControls />
       </div>
