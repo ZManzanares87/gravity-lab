@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { DataPanel } from "@/lab/components/DataPanel";
 import { ExperimentHeader } from "@/lab/components/ExperimentHeader";
 import { ExperimentPanel } from "@/lab/components/ExperimentPanel";
 import { LabCanvas } from "@/lab/components/LabCanvas";
-import { LabChart } from "@/lab/components/LabChart";
 import { ParamControls } from "@/lab/components/ParamControls";
 import { TutorDock } from "@/tutor/components/TutorDock";
 import { Disclosure } from "@/ui/Disclosure";
@@ -33,10 +31,6 @@ export default function LabPage() {
         <div className="flex flex-col gap-3 lg:col-start-1 lg:row-start-2">
           <Disclosure title="Experimenta tú" hint="cambia los valores del experimento">
             <ParamControls />
-          </Disclosure>
-          <Disclosure title="Datos avanzados" hint="gráfica, tabla y fórmula">
-            <LabChart />
-            <DataPanel />
           </Disclosure>
         </div>
       </div>
