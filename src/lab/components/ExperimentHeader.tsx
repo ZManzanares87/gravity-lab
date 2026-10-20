@@ -6,7 +6,7 @@ import { useLabStore } from "../store";
 import { LawDialog } from "./LawDialog";
 
 /**
- * "Experimento n de 4", la pregunta como título y una barra de progreso.
+ * "Experimento n de N", la pregunta como título y una barra de progreso.
  * Cada segmento es un botón: se puede saltar a cualquier experimento.
  */
 export function ExperimentHeader() {
@@ -27,7 +27,7 @@ export function ExperimentHeader() {
           {EXPERIMENT_TITLES[sceneId]}
         </h1>
         <nav aria-label="Experimentos">
-          <ol className="grid max-w-lg grid-cols-4 gap-1.5">
+          <ol className="grid max-w-lg auto-cols-fr grid-flow-col gap-1.5">
             {SCENE_ORDER.map((id, i) => {
               const current = id === sceneId;
               return (
