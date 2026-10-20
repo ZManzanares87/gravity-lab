@@ -131,6 +131,9 @@ export function LabCanvas() {
         context.fillText(`Suelo (${body.name})`, CANVAS_PADDING_PX, surface.y + 20);
       };
 
+      // Si algún cuerpo se dibuja como marcador, se explica una sola vez en la leyenda.
+      let anyMarker = false;
+
       const drawBody = (body: Body) => {
         const color = colorOf.get(body.id) ?? ink;
         const center = toScreen(body.position);
@@ -170,7 +173,8 @@ export function LabCanvas() {
         context.lineWidth = 2.5;
         context.strokeStyle = color;
         context.stroke();
-        drawLabel(`${body.name} (no a escala)`, center.x, center.y, 10);
+        anyMarker = true;
+        drawLabel(body.name, center.x, center.y, 10);
       };
 
       // 1. Las estelas: el camino recorrido desde el inicio.
@@ -197,6 +201,20 @@ export function LabCanvas() {
       // 2. Los cuerpos, con su nombre al lado.
       context.font = `700 14px ${fontFamily}`;
       state.bodies.forEach(drawBody);
+
+      // Leyenda: el mismo círculo hueco y qué significa, en la esquina superior izquierda.
+      if (anyMarker) {
+        const legendY = CANVAS_PADDING_PX + MARKER_RADIUS_PX;
+        context.beginPath();
+        context.arc(CANVAS_PADDING_PX + MARKER_RADIUS_PX, legendY, MARKER_RADIUS_PX, 0, 2 * Math.PI);
+        context.lineWidth = 1.5;
+        context.strokeStyle = ink;
+        context.stroke();
+        context.font = `400 13px ${fontFamily}`;
+        context.textAlign = "left";
+        context.fillStyle = ink;
+        context.fillText("Objeto demasiado pequeño para verse a escala", CANVAS_PADDING_PX + 2 * MARKER_RADIUS_PX + 6, legendY + 4);
+      }
 
       // 3. El reloj, 4 veces por segundo.
       const clock = scene.run.clock;
