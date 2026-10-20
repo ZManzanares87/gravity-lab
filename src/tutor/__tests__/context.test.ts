@@ -24,8 +24,8 @@ describe("contexto del tutor", () => {
     expect(context).toContain("Experimento actual: «¿Por qué la Luna no se cae?» (lanzamiento)");
     expect(context).toContain("- speed (\"Velocidad\")");
     expect(context).toContain("de 0 a 12 km/s");
-    // También los de las otras escenas, para que no tenga que adivinarlos.
-    expect(context).toContain("- superficie: height (1–100 m)");
+    // Solo los del experimento actual: el tutor no debe abrir otros que aún no se han predicho.
+    expect(context).not.toContain("superficie: height");
   });
 
   it("incluye las medidas del motor, la predicción y el historial", () => {

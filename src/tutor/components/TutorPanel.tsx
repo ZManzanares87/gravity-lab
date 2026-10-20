@@ -16,6 +16,7 @@ import type { SceneId } from "@/lab/scenes";
 import { useLabStore } from "@/lab/store";
 import { buildLabContext } from "../context";
 import { describeActions } from "../describeActions";
+import { preparableActions } from "../proposal";
 import { useTutorDock } from "../dockStore";
 import { TUTOR_TOOLS, type ProposeExperimentInput, type ProposeExperimentOutput } from "../tools";
 
@@ -45,15 +46,17 @@ function textOf(message: TutorMessage): string {
 
 /** Aplica una propuesta aceptada con las mismas acciones que usan los controles. */
 function applyProposal(input: ProposeExperimentInput): ProposeExperimentOutput {
-  const { dispatch } = useLabStore.getState();
-  // La IA prepara y la persona ejecuta: play nunca se aplica desde aquí. Al final, la
-  // simulación queda en pausa y en su inicio, esperando a que la persona pulse Play.
-  const rejected = input.actions
-    .filter((action) => action.type !== "play")
-    .flatMap((action) => {
+  const { dispatch, sceneId } = useLabStore.getState();
+  // La IA prepara y la persona ejecuta: qué se aplica lo decide preparableActions. Al final,
+  // la simulación queda en pausa y en su inicio, esperando a que la persona pulse Play.
+  const { apply, refused } = preparableActions(input.actions, sceneId);
+  const rejected = [
+    ...refused,
+    ...apply.flatMap((action) => {
       const result = dispatch(action);
       return result.ok ? [] : [result.reason];
-    });
+    }),
+  ];
   dispatch({ type: "pause" });
   dispatch({ type: "reset" });
   return {

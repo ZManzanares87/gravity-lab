@@ -4,7 +4,7 @@ import { EXPERIMENT_TITLES } from "@/lab/journey";
 import { measure } from "@/lab/measurements";
 import type { Phase } from "@/lab/store";
 import type { Prediction } from "@/lab/store";
-import { getScene, SCENE_ORDER, type Params, type SceneId } from "@/lab/scenes";
+import { getScene, type Params, type SceneId } from "@/lab/scenes";
 import type { Contact, SimState } from "@/physics/types";
 
 export interface LabSnapshot {
@@ -38,7 +38,6 @@ export function buildLabContext(lab: LabSnapshot, live: SimState | null): string
   const lines: string[] = [];
 
   lines.push(`Experimento actual: «${EXPERIMENT_TITLES[lab.sceneId]}» (${lab.sceneId}).`);
-  lines.push(`Escenas disponibles: ${SCENE_ORDER.join(", ")}.`);
 
   lines.push("Controles (clave: valor actual, rango):");
   scene.params.forEach((spec) => {
@@ -49,13 +48,6 @@ export function buildLabContext(lab: LabSnapshot, live: SimState | null): string
     );
   });
 
-  lines.push("Controles de otras escenas (antes, usa loadScene):");
-  SCENE_ORDER.filter((id) => id !== lab.sceneId).forEach((id) => {
-    const keys = getScene(id).params.map(
-      (spec) => `${spec.key} (${formatNumber(spec.min)}–${formatNumber(spec.max)}${spec.unit ? ` ${spec.unit}` : ""})`,
-    );
-    lines.push(`- ${id}: ${keys.join(", ")}.`);
-  });
 
   const status = lab.finished
     ? "terminado tras un contacto"
