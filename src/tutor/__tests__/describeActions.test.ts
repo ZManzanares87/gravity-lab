@@ -11,6 +11,6 @@ describe("descripción de propuestas", () => {
       ],
       "superficie",
     );
-    expect(steps).toEqual(["Abrir la escena Lanzamiento", "Velocidad: 7,6 km/s", "Reproducir"]);
+    expect(steps).toEqual(["Abrir el experimento «¿Por qué la Luna no se cae?»", "Velocidad: 7,6 km/s", "Reproducir"]);
   });
 });

@@ -21,7 +21,7 @@ describe("contexto del tutor", () => {
   });
 
   it("incluye la escena, las claves de los controles y sus rangos", () => {
-    expect(context).toContain("Escena actual: Lanzamiento");
+    expect(context).toContain("Experimento actual: «¿Por qué la Luna no se cae?» (lanzamiento)");
     expect(context).toContain("- speed (\"Velocidad\")");
     expect(context).toContain("de 0 a 12 km/s");
     // También los de las otras escenas, para que no tenga que adivinarlos.

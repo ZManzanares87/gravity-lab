@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import type { Body, SimState, Vec2 } from "@/physics/types";
 import { SimulationRunner } from "@/simulation/runner";
 import { formatNumber } from "../format";
+import { EXPERIMENT_TITLES } from "../journey";
 import { setLiveState } from "../liveState";
 import { drawMeasureLines } from "../measureLines";
 import { getScene } from "../scenes";
@@ -285,7 +286,7 @@ export function LabCanvas() {
       <canvas
         ref={canvasRef}
         role="img"
-        aria-label={`Simulación de la escena ${getScene(sceneId).title}`}
+        aria-label={`Simulación del experimento «${EXPERIMENT_TITLES[sceneId]}»`}
         className="block aspect-[4/3] w-full border border-ink/20 bg-paper"
       />
       <div className="mt-4 flex flex-wrap items-center gap-3">

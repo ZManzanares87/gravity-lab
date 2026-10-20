@@ -1,5 +1,6 @@
 import type { LabAction } from "@/lab/actions";
 import { formatNumber } from "@/lab/format";
+import { EXPERIMENT_TITLES } from "@/lab/journey";
 import { getScene, type SceneId } from "@/lab/scenes";
 
 /**
@@ -13,7 +14,7 @@ export function describeActions(actions: readonly LabAction[], startScene: Scene
     switch (action.type) {
       case "loadScene":
         scene = action.scene;
-        return `Abrir la escena ${getScene(action.scene).title}`;
+        return `Abrir el experimento «${EXPERIMENT_TITLES[action.scene]}»`;
       case "setParam": {
         const spec = getScene(scene).params.find((param) => param.key === action.key);
         const value = formatNumber(action.value, 4);

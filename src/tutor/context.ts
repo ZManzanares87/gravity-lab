@@ -1,5 +1,6 @@
 import { EXPERIMENTS, type LawPart } from "@/lab/experiments";
 import { formatNumber, formatQuantity } from "@/lab/format";
+import { EXPERIMENT_TITLES } from "@/lab/journey";
 import { measure } from "@/lab/measurements";
 import type { Phase } from "@/lab/store";
 import type { Prediction } from "@/lab/store";
@@ -36,7 +37,7 @@ export function buildLabContext(lab: LabSnapshot, live: SimState | null): string
   const experiment = EXPERIMENTS[lab.sceneId];
   const lines: string[] = [];
 
-  lines.push(`Escena actual: ${scene.title} (${lab.sceneId}).`);
+  lines.push(`Experimento actual: «${EXPERIMENT_TITLES[lab.sceneId]}» (${lab.sceneId}).`);
   lines.push(`Escenas disponibles: ${SCENE_ORDER.join(", ")}.`);
 
   lines.push("Controles (clave: valor actual, rango):");
