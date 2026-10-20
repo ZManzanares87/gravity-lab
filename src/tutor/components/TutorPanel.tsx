@@ -68,7 +68,7 @@ function applyProposal(input: ProposeExperimentInput): ProposeExperimentOutput {
 /** El servidor responde con un código conocido; aquí se traduce a un mensaje útil. */
 function errorText(error: Error): string {
   if (error.message.includes("tutor-no-disponible")) {
-    return "El tutor no está disponible ahora mismo: falta configurar la clave de la IA. Todo lo demás funciona igual: los experimentos, sus explicaciones y «Ver la ley».";
+    return "El tutor no está disponible ahora mismo: falta configurar la clave de la IA. Todo lo demás funciona igual: los experimentos, sus explicaciones y la ley completa.";
   }
   if (error.message.includes("demasiadas-peticiones")) {
     return "Has enviado muchos mensajes seguidos. Prueba de nuevo dentro de un rato.";
@@ -133,8 +133,8 @@ export function TutorPanel() {
 
     void sendMessage({
       text: latest.correct
-        ? `En el experimento «${title}» predije «${chosen}» y acerté. ${score} Ponme un reto un poco más difícil sobre esto.`
-        : `En el experimento «${title}» predije «${chosen}», pero la respuesta era «${labelOf(experiment.answer)}». ${score} Ayúdame a entender mi error.`,
+        ? `En el experimento «${title}» predije «${chosen}» y acerté. ${score}`
+        : `En el experimento «${title}» predije «${chosen}», pero la respuesta era «${labelOf(experiment.answer)}». ${score}`,
       metadata: { auto: { chosen, correct: latest.correct } },
     });
   }, [predictions, busy, pendingProposal, sendMessage]);
@@ -168,17 +168,8 @@ export function TutorPanel() {
 
       <div ref={listRef} className="mt-3 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1 sm:max-h-[50vh] sm:min-h-48 sm:flex-none">
         {messages.map((message) => {
-          // Un mensaje automático se muestra como aviso, no como si lo hubiera escrito la persona.
-          const auto = message.metadata?.auto;
-          if (message.role === "user" && auto) {
-            return (
-              <p key={message.id} className="border-t border-ink/20 pt-3 text-sm text-ink-soft">
-                {auto.correct
-                  ? `Has acertado con «${auto.chosen}». El tutor te propone un reto:`
-                  : `Has predicho «${auto.chosen}». El tutor te lo explica:`}
-              </p>
-            );
-          }
+          // Un mensaje automático no se muestra: la guía ya dice qué predijo y si acertó.
+          if (message.role === "user" && message.metadata?.auto) return null;
           return (
             <div key={message.id} className={message.role === "user" ? "ml-6 bg-ink/5 p-3" : ""}>
               {/* "Tutor" ya es el título del panel: aquí solo lo oye el lector de pantalla. */}
