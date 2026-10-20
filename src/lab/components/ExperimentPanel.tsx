@@ -161,6 +161,9 @@ export function ExperimentPanel() {
               <p>{part.text}</p>
             </div>
           )}
+          <p className="text-ink-soft">
+            ¿Y si cambias los valores? Pruébalo en «Experimenta tú», debajo de la simulación.
+          </p>
           {next ? (
             <button
               type="button"

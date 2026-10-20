@@ -241,7 +241,7 @@ interface ProposalProps {
   onAnswer(toolCallId: string, proposal: ProposeExperimentInput, accepted: boolean): void;
 }
 
-/** La tarjeta de una propuesta: qué quiere probar el tutor, qué va a cambiar, y Sí o No. */
+/** La tarjeta de una propuesta: qué quiere probar el tutor, qué va a cambiar (plegado, para quien quiera verlo) y Sí o No. */
 function Proposal({ part, sceneId, onAnswer }: ProposalProps) {
   switch (part.state) {
     case "input-streaming":
@@ -251,11 +251,14 @@ function Proposal({ part, sceneId, onAnswer }: ProposalProps) {
         <div className="mt-2 border border-body-a p-3">
           <p className="font-bold">Propuesta de experimento</p>
           <p className="mt-1">{part.input.reason}</p>
-          <ul className="mt-2 list-disc pl-5 text-sm">
-            {describeActions(part.input.actions, sceneId).map((step, index) => (
-              <li key={index}>{step}</li>
-            ))}
-          </ul>
+          <details className="mt-2 text-sm">
+            <summary className="cursor-pointer py-2 text-ink-soft">Ver los cambios</summary>
+            <ul className="list-disc pl-5">
+              {describeActions(part.input.actions, sceneId).map((step, index) => (
+                <li key={index}>{step}</li>
+              ))}
+            </ul>
+          </details>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
