@@ -34,7 +34,7 @@ const GREETING: TutorMessage = {
   parts: [
     {
       type: "text",
-      text: "Hola, soy tu tutor. Después de cada predicción hablaremos de lo que ha pasado. Y si tienes dudas, pregúntame: puedo prepararte un experimento para que lo veas.",
+      text: "¡Hola! Vamos a explorar la gravedad juntos. Haz predicciones, experimenta y pregúntame lo que quieras: podemos comprobarlo con un experimento.",
     },
   ],
 };
