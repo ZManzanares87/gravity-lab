@@ -28,10 +28,8 @@ export interface LabState {
   readonly contacts: readonly Contact[];
   /** Opción marcada en la pregunta de la escena actual. */
   readonly selectedOption: string | null;
-  /** La explicación de la escena actual está visible. */
-  readonly revealed: boolean;
-  /** Pulsó "Comprobar" y la simulación está mostrando el resultado. */
-  readonly checking: boolean;
+  /** En qué paso de la guía está el experimento actual. */
+  readonly phase: Phase;
 
   // Lo que dura toda la sesión (no se reinicia al cambiar de escena).
   readonly predictions: readonly Prediction[];
@@ -43,10 +41,18 @@ export interface LabState {
   selectOption(option: string): void;
   /** Botón "Comprobar": ejecuta las acciones del experimento. */
   check(): void;
+  /** Botón "Entender por qué": muestra la explicación cuando ya se ha visto el resultado. */
+  understand(): void;
   /** Avisos del canvas. */
   reportContacts(contacts: readonly Contact[]): void;
   reportTime(time: number): void;
 }
+
+/**
+ * Los pasos de cada experimento: predice, mira, ya se ha visto el resultado y entiende.
+ * Una sola fase en lugar de varios booleanos: así no puede haber combinaciones imposibles.
+ */
+export type Phase = "predict" | "watch" | "ready" | "understand";
 
 /** Todo lo que depende de la escena y se limpia al cargar otra. */
 function sceneState(sceneId: SceneId) {
@@ -57,8 +63,7 @@ function sceneState(sceneId: SceneId) {
     finished: false,
     contacts: [] as readonly Contact[],
     selectedOption: null,
-    revealed: false,
-    checking: false,
+    phase: "predict" as Phase,
   };
 }
 
@@ -66,13 +71,12 @@ export function createLabStore(initialScene: SceneId = "superficie") {
   return create<LabState>()((set, get) => {
     /** Muestra la explicación y registra la predicción y lo descubierto. */
     const reveal = () => {
-      const { sceneId, selectedOption, revealed, predictions, discovered } = get();
-      if (revealed) return;
+      const { sceneId, selectedOption, phase, predictions, discovered } = get();
+      if (phase !== "ready") return;
       const experiment = EXPERIMENTS[sceneId];
       const part = experiment.discovers;
       set({
-        revealed: true,
-        checking: false,
+        phase: "understand",
         predictions: selectedOption
           ? [...predictions, { scene: sceneId, option: selectedOption, correct: selectedOption === experiment.answer }]
           : predictions,
@@ -83,6 +87,18 @@ export function createLabStore(initialScene: SceneId = "superficie") {
     const apply = (action: LabAction) => {
       switch (action.type) {
         case "loadScene":
+          // Si es la escena en la que ya estás (el tutor la carga al preparar un experimento),
+          // solo vuelve a sus valores iniciales: no borra la predicción ni devuelve a Predice.
+          if (action.scene === get().sceneId) {
+            set((state) => ({
+              params: { ...SCENES[action.scene].defaults } as Params,
+              playing: false,
+              finished: false,
+              contacts: [],
+              runId: state.runId + 1,
+            }));
+            return;
+          }
           set((state) => ({ ...sceneState(action.scene), runId: state.runId + 1 }));
           return;
         case "setParam":
@@ -127,22 +143,24 @@ export function createLabStore(initialScene: SceneId = "superficie") {
       selectOption: (option) => set({ selectedOption: option }),
 
       check: () => {
+        if (get().phase !== "predict") return;
         const { sceneId, dispatch } = get();
         const experiment = EXPERIMENTS[sceneId];
         experiment.check.forEach((action) => dispatch(action));
-        set({ checking: true });
-        if (experiment.reveal.on === "check") reveal();
+        set({ phase: "watch" });
       },
+
+      understand: () => reveal(),
 
       reportContacts: (contacts) => {
         set({ playing: false, finished: true, contacts });
-        // Solo revela si se llegó por "Comprobar": reproducir libremente no se salta la predicción.
-        if (get().checking && EXPERIMENTS[get().sceneId].reveal.on !== "check") reveal();
+        // Solo cuenta si se llegó por "Comprobar": reproducir libremente no se salta la predicción.
+        if (get().phase === "watch") set({ phase: "ready" });
       },
 
       reportTime: (time) => {
         const { reveal: rule } = EXPERIMENTS[get().sceneId];
-        if (get().checking && rule.on === "time" && time >= rule.after) reveal();
+        if (get().phase === "watch" && rule.on === "time" && time >= rule.after) set({ phase: "ready" });
       },
     };
   });

@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { ExperimentHeader } from "@/lab/components/ExperimentHeader";
 import { ExperimentPanel } from "@/lab/components/ExperimentPanel";
+import { ExploreControls } from "@/lab/components/ExploreControls";
 import { LabCanvas } from "@/lab/components/LabCanvas";
-import { ParamControls } from "@/lab/components/ParamControls";
 import { TutorDock } from "@/tutor/components/TutorDock";
-import { Disclosure } from "@/ui/Disclosure";
 
 export const metadata: Metadata = {
   title: "Laboratorio",
@@ -29,9 +28,7 @@ export default function LabPage() {
         </div>
 
         <div className="flex flex-col gap-3 lg:col-start-1 lg:row-start-2">
-          <Disclosure title="Experimenta tú" hint="cambia los valores del experimento">
-            <ParamControls />
-          </Disclosure>
+          <ExploreControls />
         </div>
       </div>
       <TutorDock />

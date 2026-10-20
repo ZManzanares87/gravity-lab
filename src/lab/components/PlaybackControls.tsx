@@ -46,6 +46,10 @@ export function PlaybackControls() {
   const speed = useLabStore((state) => state.speed);
   const dispatch = useLabStore((state) => state.dispatch);
   const setSpeed = useLabStore((state) => state.setSpeed);
+  const phase = useLabStore((state) => state.phase);
+
+  // En Predice no hay nada que reproducir: la simulación arranca al comprobar.
+  if (phase === "predict") return null;
 
   const main = finished
     ? { label: "Repetir", icon: <RestartIcon /> }

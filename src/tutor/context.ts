@@ -1,6 +1,7 @@
 import { EXPERIMENTS, type LawPart } from "@/lab/experiments";
 import { formatNumber, formatQuantity } from "@/lab/format";
 import { measure } from "@/lab/measurements";
+import type { Phase } from "@/lab/store";
 import type { Prediction } from "@/lab/store";
 import { getScene, SCENE_ORDER, type Params, type SceneId } from "@/lab/scenes";
 import type { Contact, SimState } from "@/physics/types";
@@ -12,7 +13,7 @@ export interface LabSnapshot {
   readonly finished: boolean;
   readonly contacts: readonly Contact[];
   readonly selectedOption: string | null;
-  readonly revealed: boolean;
+  readonly phase: Phase;
   readonly predictions: readonly Prediction[];
   readonly discovered: readonly LawPart[];
 }
@@ -22,6 +23,14 @@ export interface LabSnapshot {
  * controles con su clave y su rango, para que la IA sepa qué puede proponer,
  * y las medidas del motor, para que nunca tenga que inventar un número.
  */
+/** Qué sabe ya la persona del experimento actual: así el tutor no adelanta la explicación. */
+const PHASE_TEXT: Record<Phase, string> = {
+  predict: "aún sin comprobar",
+  watch: "comprobándola: está viendo la simulación",
+  ready: "ha visto el resultado, pero aún no la explicación",
+  understand: "ya comprobada",
+};
+
 export function buildLabContext(lab: LabSnapshot, live: SimState | null): string {
   const scene = getScene(lab.sceneId);
   const experiment = EXPERIMENTS[lab.sceneId];
@@ -76,10 +85,10 @@ export function buildLabContext(lab: LabSnapshot, live: SimState | null): string
   lines.push(`Pregunta del experimento: "${experiment.question}"`);
   lines.push(
     chosen
-      ? `Predicción de la persona: "${chosen.label}" (${lab.revealed ? "ya comprobada" : "aún sin comprobar"}).`
+      ? `Predicción de la persona: "${chosen.label}" (${PHASE_TEXT[lab.phase]}).`
       : "La persona aún no ha elegido una predicción.",
   );
-  if (lab.revealed) lines.push(`Explicación ya mostrada: "${experiment.explanation}"`);
+  if (lab.phase === "understand") lines.push(`Explicación ya mostrada: "${experiment.explanation}"`);
 
   lines.push(
     lab.predictions.length > 0

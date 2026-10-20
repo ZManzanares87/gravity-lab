@@ -8,7 +8,7 @@ function lowerFirst(text: string): string {
   return text.charAt(0).toLowerCase() + text.slice(1);
 }
 
-/** Anuncia los contactos: "Contacto con el suelo en t = 1,43 s: bola de bolos y pelota de tenis, a la vez." */
+/** Anuncia los contactos a lectores de pantalla (en pantalla, el resultado lo cuenta la guía): "Contacto con el suelo en t = 1,43 s: bola de bolos y pelota de tenis, a la vez." */
 export function ContactMessage() {
   const sceneId = useLabStore((state) => state.sceneId);
   const params = useLabStore((state) => state.params);
@@ -36,7 +36,7 @@ export function ContactMessage() {
   }
 
   return (
-    <p role="status" className="mt-3 min-h-6 font-bold">
+    <p role="status" className="sr-only">
       {message}
     </p>
   );

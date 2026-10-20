@@ -9,7 +9,7 @@ const lab: LabSnapshot = {
   finished: false,
   contacts: [],
   selectedOption: "orbita",
-  revealed: false,
+  phase: "predict",
   predictions: [{ scene: "superficie", option: "bola", correct: false }],
   discovered: ["masa"],
 };

@@ -8,13 +8,14 @@ describe("store del laboratorio", () => {
     store.getState().selectOption("a-la-vez");
     store.getState().check();
     store.getState().reportContacts([{ bodyId: "bola", otherBodyId: "tierra", time: 1.4 }]);
+    store.getState().understand();
 
     store.getState().dispatch({ type: "loadScene", scene: "lanzamiento" });
     const state = store.getState();
 
     expect(state.params).toEqual(SCENES.lanzamiento.defaults);
     expect(state.selectedOption).toBeNull();
-    expect(state.revealed).toBe(false);
+    expect(state.phase).toBe("predict");
     expect(state.finished).toBe(false);
     // Lo de la sesión sigue: la predicción y lo descubierto.
     expect(state.predictions).toEqual([{ scene: "superficie", option: "a-la-vez", correct: true }]);
@@ -29,7 +30,7 @@ describe("store del laboratorio", () => {
 
     const state = store.getState();
     expect(state.finished).toBe(true);
-    expect(state.revealed).toBe(false);
+    expect(state.phase).toBe("predict");
     expect(state.predictions).toEqual([]);
   });
 
@@ -59,13 +60,37 @@ describe("store del laboratorio", () => {
     expect(store.getState().runId).toBe(runBefore + 1);
   });
 
-  it("en Lanzamiento, la explicación aparece tras 30 minutos simulados", () => {
+  it("en Lanzamiento, el resultado se da por visto tras 30 minutos simulados", () => {
     const store = createLabStore("lanzamiento");
     store.getState().check();
     store.getState().reportTime(10 * 60);
-    expect(store.getState().revealed).toBe(false);
+    expect(store.getState().phase).toBe("watch");
     store.getState().reportTime(30 * 60);
-    expect(store.getState().revealed).toBe(true);
+    expect(store.getState().phase).toBe("ready");
+  });
+
+  it("la explicación solo aparece al pulsar «Entender por qué», y después la predicción queda fija", () => {
+    const store = createLabStore("superficie");
+    store.getState().selectOption("a-la-vez");
+    store.getState().check();
+    expect(store.getState().phase).toBe("watch");
+
+    // Antes de ver el resultado, el botón no hace nada.
+    store.getState().understand();
+    expect(store.getState().phase).toBe("watch");
+
+    store.getState().reportContacts([{ bodyId: "bola", otherBodyId: "tierra", time: 1.4 }]);
+    expect(store.getState().phase).toBe("ready");
+    expect(store.getState().predictions).toEqual([]);
+
+    store.getState().understand();
+    expect(store.getState().phase).toBe("understand");
+    expect(store.getState().predictions).toEqual([{ scene: "superficie", option: "a-la-vez", correct: true }]);
+    expect(store.getState().discovered).toEqual(["masa"]);
+
+    // Comprobar otra vez no vuelve atrás.
+    store.getState().check();
+    expect(store.getState().phase).toBe("understand");
   });
 
   it("una acción rechazada no cambia nada", () => {
@@ -74,5 +99,21 @@ describe("store del laboratorio", () => {
     const result = store.getState().dispatch({ type: "setParam", key: "thirdMass", value: 1 });
     expect(result.ok).toBe(false);
     expect(store.getState().params).toEqual(before.params);
+  });
+
+  it("cargar la escena en la que ya estás no devuelve a Predice ni borra la predicción", () => {
+    const store = createLabStore("superficie");
+    store.getState().selectOption("bola");
+    store.getState().check();
+    store.getState().reportContacts([{ bodyId: "bola", otherBodyId: "tierra", time: 1.4 }]);
+    store.getState().understand();
+    store.getState().dispatch({ type: "setParam", key: "height", value: 50 });
+
+    // Es lo que hace el tutor al preparar un experimento en la escena actual.
+    store.getState().dispatch({ type: "loadScene", scene: "superficie" });
+
+    expect(store.getState().phase).toBe("understand");
+    expect(store.getState().selectedOption).toBe("bola");
+    expect(store.getState().params).toEqual(SCENES.superficie.defaults);
   });
 });

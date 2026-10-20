@@ -4,9 +4,8 @@ import type { SceneId } from "./scenes";
 /** Partes de la ley que un experimento ayuda a descubrir (para "Ver la ley"). */
 export type LawPart = "masa" | "distancia" | "universal";
 
-/** Cuándo aparece la explicación del experimento. */
+/** Cuándo se ha visto el resultado y ya se puede pasar a Entiende. */
 export type Reveal =
-  | { readonly on: "check" }
   /** Tras un tiempo simulado, o antes si hay un contacto. */
   | { readonly on: "time"; readonly after: number }
   | { readonly on: "contact" };
