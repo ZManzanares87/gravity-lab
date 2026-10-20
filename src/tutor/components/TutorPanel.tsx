@@ -34,7 +34,7 @@ const GREETING: TutorMessage = {
   parts: [
     {
       type: "text",
-      text: "Hola, soy tu tutor. Aquí puedes soltar objetos, alejarlos de la Tierra, lanzarlos en órbita y ver qué pasa con tres estrellas. ¿Tienes alguna curiosidad sobre la gravedad, o prefieres empezar experimentando? Puedo proponerte experimentos y, si me das permiso, prepararlos en el laboratorio.",
+      text: "Hola, soy tu tutor. Después de cada predicción hablaremos de lo que ha pasado. Y si tienes dudas, pregúntame: puedo prepararte un experimento para que lo veas.",
     },
   ],
 };
