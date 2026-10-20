@@ -1,7 +1,7 @@
 import type { LabAction } from "./actions";
 import type { SceneId } from "./scenes";
 
-/** Partes de la ley que un experimento ayuda a descubrir (para "Ver la ley"). */
+/** Partes de la ley que un experimento ayuda a descubrir (las usa el diálogo de la ley). */
 export type LawPart = "masa" | "distancia" | "universal";
 
 /** Cuándo se ha visto el resultado y ya se puede pasar a Entiende. */
