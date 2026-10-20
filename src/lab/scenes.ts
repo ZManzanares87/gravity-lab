@@ -41,7 +41,6 @@ export interface SceneRun {
 }
 
 export interface SceneDefinition<P extends Params> {
-  readonly title: string;
   readonly defaults: P;
   readonly params: readonly ParamSpec<P>[];
   /** Constante G de la escena: la real o 1 en unidades abstractas. */
@@ -81,7 +80,6 @@ function ballOffset(height: number): number {
 }
 
 const superficie = defineScene({
-  title: "Superficie",
   defaults: { height: 10, bowlingMass: 7, tennisMass: 0.058, upSpeed: 0 },
   params: [
     { key: "height", label: "Altura", unit: "m", min: 1, max: 100, scale: "linear" },
@@ -147,7 +145,6 @@ export function launchExtent({ speed, angle, launchAltitude }: Params): number {
 }
 
 const lanzamiento = defineScene({
-  title: "Lanzamiento",
   defaults: { speed: 3, angle: 0, launchAltitude: 500 },
   params: [
     { key: "speed", label: "Velocidad", unit: "km/s", min: 0, max: 12, scale: "linear" },
@@ -183,7 +180,6 @@ const STAR_RADIUS = 0.05;
 const STAR_MASS = 1;
 
 const tercerCuerpo = defineScene({
-  title: "Tercer cuerpo",
   defaults: { thirdMass: 0, thirdDistance: 1.5, thirdSpeed: 0.4 },
   params: [
     { key: "thirdMass", label: "Masa de la tercera estrella", unit: "", min: 0, max: 1, scale: "linear", ends: ["Ninguna", "Como A y B"] },
