@@ -1,5 +1,6 @@
 import type { Body, Vec2 } from "@/physics/types";
 import { formatDistance } from "./format";
+import { withoutNoise } from "./measurements";
 
 interface DrawingContext {
   readonly context: CanvasRenderingContext2D;
@@ -37,6 +38,9 @@ export function drawMeasureLines(drawing: DrawingContext, bodies: readonly Body[
     const dy = body.position.y - central.position.y;
     const distance = Math.hypot(dx, dy);
     if (distance === 0) return;
+    const altitude = withoutNoise(distance - central.radius - body.radius);
+    // Apoyado en el suelo, la cota no aporta nada: ya se ve que ha llegado.
+    if (flat && altitude === 0) return;
     // Dirección del centro del cuerpo central hacia el cuerpo.
     const ux = dx / distance;
     const uy = dy / distance;
@@ -48,7 +52,7 @@ export function drawMeasureLines(drawing: DrawingContext, bodies: readonly Body[
       ? toScreen({ x: central.position.x + ux * central.radius, y: central.position.y + uy * central.radius })
       : toScreen(central.position);
     const label = flat
-      ? formatDistance(distance - central.radius - body.radius)
+      ? formatDistance(altitude)
       : `r = ${formatDistance(distance)}`;
 
     context.setLineDash(flat ? [] : [6, 5]);

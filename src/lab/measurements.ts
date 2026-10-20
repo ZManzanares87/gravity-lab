@@ -53,6 +53,6 @@ export function measure(bodies: readonly Body[], G: number, centralId = "tierra"
  */
 const NUMERICAL_NOISE = 1e-6;
 
-function withoutNoise(value: number): number {
+export function withoutNoise(value: number): number {
   return Math.abs(value) < NUMERICAL_NOISE ? 0 : value;
 }
