@@ -23,7 +23,7 @@ export function ContactMessage() {
     const nameOf = (id: string) => lowerFirst(bodies.find((body) => body.id === id)?.name ?? id);
     const names = contacts.map((contact) => nameOf(contact.bodyId));
     const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} y ${names.at(-1)}` : names[0];
-    const clock = scene.run?.clock;
+    const clock = scene.run.clock;
     const time = clock
       ? `${formatNumber(first.time / clock.secondsPerUnit, 3)}${clock.unit ? ` ${clock.unit}` : ""}`
       : "";

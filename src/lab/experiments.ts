@@ -38,21 +38,6 @@ export const EXPERIMENTS: Record<SceneId, Experiment> = {
       "Llegan a la vez. La Tierra tira con más fuerza de la bola de bolos (pesa unas 120 veces más), pero también cuesta 120 veces más ponerla en movimiento. Las dos cosas se compensan exactamente: la gravedad acelera igual a cualquier objeto, tenga la masa que tenga. En la vida real, una pluma cae más despacio por culpa del aire, pero aquí no hay aire.",
     discovers: "masa",
   },
-  altura: {
-    question:
-      "La Estación Espacial está a 400 km de altura. Allí, ¿cuánto pesa un objeto comparado con lo que pesa en el suelo?",
-    options: [
-      { id: "nada", label: "Nada: en el espacio no hay gravedad" },
-      { id: "mitad", label: "Mucho menos, más o menos la mitad" },
-      { id: "casi-igual", label: "Casi lo mismo, alrededor del 90 %" },
-    ],
-    answer: "casi-igual",
-    check: [{ type: "setParam", key: "altitude", value: 400 }],
-    reveal: { on: "check" },
-    explanation:
-      "Casi lo mismo: un 89 %. La gravedad se debilita con la distancia al centro de la Tierra, no al suelo, y subir 400 km solo te aleja un 6 % del centro. Si sigues subiendo hasta duplicar la distancia al centro (6371 km de altura), la fuerza baja a la cuarta parte: al doble de distancia, un cuarto de fuerza. Entonces, si en la Estación Espacial hay gravedad, ¿por qué flotan los astronautas? Lo descubrirás en el siguiente experimento.",
-    discovers: "distancia",
-  },
   lanzamiento: {
     question:
       "Lanzamos un proyectil en horizontal a 7,6 km/s, la velocidad de la Estación Espacial. ¿Qué le pasa?",

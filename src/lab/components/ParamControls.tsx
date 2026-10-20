@@ -79,20 +79,6 @@ function ParamControl({ spec, value, onChange }: ParamControlProps) {
         onChange={(event) => onChange(fromSlider(spec, Number(event.target.value)))}
         className="h-8 w-full accent-body-a"
       />
-      {spec.marks && (
-        <div className="flex flex-wrap gap-2">
-          {spec.marks.map((mark) => (
-            <button
-              key={mark.value}
-              type="button"
-              onClick={() => onChange(mark.value)}
-              className="min-h-9 border border-ink/30 px-2 text-sm hover:bg-ink/5"
-            >
-              {mark.label}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

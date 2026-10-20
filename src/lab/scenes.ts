@@ -3,7 +3,7 @@ import type { Body, PhysicsConfig } from "@/physics/types";
 import { vec, ZERO } from "@/physics/vec2";
 
 /**
- * Las cuatro escenas del laboratorio. Los parámetros se guardan en las
+ * Las escenas del laboratorio. Los parámetros se guardan en las
  * unidades que ve el usuario (m, km, km/s, kg, grados): así los controles,
  * las explicaciones y el tutor IA hablan el mismo idioma. Cada escena los
  * convierte a unidades del Sistema Internacional al construir los cuerpos.
@@ -18,10 +18,8 @@ export interface ParamSpec<P extends Params> {
   readonly unit: string;
   readonly min: number;
   readonly max: number;
-  /** "log" para rangos enormes, como la altura de 10 m a la distancia de la Luna. */
+  /** "log" para rangos enormes, como las masas, de 10 g a 1000 kg. */
   readonly scale: "linear" | "log";
-  /** Valores destacados en el deslizador, por ejemplo la Estación Espacial. */
-  readonly marks?: readonly { readonly value: number; readonly label: string }[];
 }
 
 /** El rectángulo del mundo que debe verse en pantalla. */
@@ -46,8 +44,7 @@ export interface SceneDefinition<P extends Params> {
   readonly params: readonly ParamSpec<P>[];
   /** Constante G de la escena: la real o 1 en unidades abstractas. */
   readonly G: number;
-  /** Ausente en Altura, que es un medidor sin animación. */
-  readonly run?: SceneRun;
+  readonly run: SceneRun;
   buildBodies(params: P): Body[];
   view(params: P): View;
 }
@@ -69,7 +66,7 @@ export const EARTH: Body = {
   velocity: ZERO,
 };
 
-// ── 1. Superficie ──────────────────────────────────────────────────────
+// ── Superficie ──────────────────────────────────────────────────────
 const BOWLING_RADIUS = 0.11;
 const TENNIS_RADIUS = 0.033;
 
@@ -126,50 +123,7 @@ const superficie = defineScene({
   },
 });
 
-// ── 2. Altura (medidor, sin animación) ─────────────────────────────────
-export const MOON_DISTANCE_KM = 384_400;
-
-const altura = defineScene({
-  title: "Altura",
-  defaults: { altitude: 0.01, objectMass: 1 },
-  params: [
-    {
-      key: "altitude",
-      label: "Altura sobre el suelo",
-      unit: "km",
-      min: 0.01,
-      max: MOON_DISTANCE_KM,
-      scale: "log",
-      marks: [
-        { value: 400, label: "Estación Espacial" },
-        { value: 6_371, label: "Doble de distancia al centro" },
-        { value: 20_200, label: "Satélites GPS" },
-        { value: MOON_DISTANCE_KM, label: "Luna" },
-      ],
-    },
-    { key: "objectMass", label: "Masa del objeto", unit: "kg", min: 0.01, max: 1000, scale: "log" },
-  ],
-  G: G_SI,
-  buildBodies: ({ altitude, objectMass }) => [
-    EARTH,
-    {
-      id: "objeto",
-      name: "Objeto",
-      mass: objectMass,
-      radius: 0,
-      position: vec(0, R + altitude * 1000),
-      velocity: ZERO,
-    },
-  ],
-  // Se ven la Tierra y el objeto: al alejarlo, la Tierra se hace pequeña.
-  view: ({ altitude }) => {
-    const top = Math.max(1.15 * R, 1.1 * (R + altitude * 1000));
-    const half = Math.max(1.15 * R, top / 2);
-    return { minX: -half, maxX: half, minY: -1.15 * R, maxY: top };
-  },
-});
-
-// ── 3. Lanzamiento (el cañón de Newton) ────────────────────────────────
+// ── Lanzamiento (el cañón de Newton) ────────────────────────────────
 
 /**
  * Medio lado de la vista: lo justo para que quepa la órbita entera.
@@ -221,7 +175,7 @@ const lanzamiento = defineScene({
   },
 });
 
-// ── 4. Tercer cuerpo (unidades abstractas, como la galería) ────────────
+// ── Tercer cuerpo (unidades abstractas, como la galería) ────────────
 const STAR_RADIUS = 0.05;
 
 const tercerCuerpo = defineScene({
@@ -258,15 +212,14 @@ const tercerCuerpo = defineScene({
 
 export const SCENES = {
   superficie,
-  altura,
   lanzamiento,
   "tercer-cuerpo": tercerCuerpo,
 };
 
 export type SceneId = keyof typeof SCENES;
 
-/** Orden sugerido de los experimentos (ver especificación 2.10). */
-export const SCENE_ORDER: readonly SceneId[] = ["superficie", "altura", "lanzamiento", "tercer-cuerpo"];
+/** Orden de los experimentos: el laboratorio, la bienvenida y el tutor leen de aquí. */
+export const SCENE_ORDER = ["superficie", "lanzamiento", "tercer-cuerpo"] as const satisfies readonly SceneId[];
 
 /** Mantiene un valor dentro del rango de su control. */
 export function clampParam(spec: { readonly min: number; readonly max: number }, value: number): number {

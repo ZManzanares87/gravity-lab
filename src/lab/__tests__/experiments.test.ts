@@ -26,8 +26,4 @@ describe("validación de acciones", () => {
     const result = validateAction({ type: "setParam", key: "speed", value: 50 }, "lanzamiento");
     expect(result).toEqual({ ok: true, action: { type: "setParam", key: "speed", value: 12 } });
   });
-
-  it("no permite reproducir en la escena Altura, que es un medidor", () => {
-    expect(validateAction({ type: "play" }, "altura").ok).toBe(false);
-  });
 });

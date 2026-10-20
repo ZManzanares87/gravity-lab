@@ -198,9 +198,9 @@ export function LabCanvas() {
       state.bodies.forEach(drawBody);
 
       // 3. El reloj, 4 veces por segundo.
-      const clock = scene.run?.clock;
+      const clock = scene.run.clock;
       const now = performance.now();
-      if (clock && clockRef.current && now - lastClockUpdate > 250) {
+      if (clockRef.current && now - lastClockUpdate > 250) {
         const value = formatNumber(state.time / clock.secondsPerUnit, 3);
         clockRef.current.textContent = `t = ${value}${clock.unit ? ` ${clock.unit}` : ""}`;
         lastClockUpdate = now;
@@ -210,14 +210,6 @@ export function LabCanvas() {
     const initial: SimState = { time: 0, bodies };
     record(initial);
     render(initial);
-    if (clockRef.current && !scene.run) clockRef.current.textContent = "";
-
-    // Altura es un medidor: se dibuja una vez, sin simulación.
-    if (!scene.run) {
-      const observer = new ResizeObserver(() => render(initial));
-      observer.observe(canvas);
-      return () => observer.disconnect();
-    }
 
     const runner = new SimulationRunner({
       bodies,
@@ -255,8 +247,8 @@ export function LabCanvas() {
     runner.pause();
     // En pausa (también tras un contacto), el reloj muestra el tiempo exacto,
     // aunque el último fotograma cayera entre dos actualizaciones del texto.
-    const clock = getScene(sceneId).run?.clock;
-    if (clock && clockRef.current) {
+    const clock = getScene(sceneId).run.clock;
+    if (clockRef.current) {
       const value = formatNumber(runner.state.time / clock.secondsPerUnit, 3);
       clockRef.current.textContent = `t = ${value}${clock.unit ? ` ${clock.unit}` : ""}`;
     }

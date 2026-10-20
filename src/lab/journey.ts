@@ -6,7 +6,6 @@ import type { SceneId } from "./scenes";
  */
 export const EXPERIMENT_TITLES = {
   superficie: "¿Importa el peso al caer?",
-  altura: "¿Pesas lo mismo lejos de la Tierra?",
   lanzamiento: "¿Por qué la Luna no se cae?",
   "tercer-cuerpo": "¿Y si hay tres cuerpos?",
 } as const satisfies Record<SceneId, string>;

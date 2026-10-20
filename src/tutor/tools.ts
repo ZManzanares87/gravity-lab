@@ -1,9 +1,9 @@
 import { tool } from "ai";
 import { z } from "zod";
-import type { SceneId } from "@/lab/scenes";
+import { SCENE_ORDER } from "@/lab/scenes";
 
-/** Las escenas, en una lista que Zod puede validar. Un test comprueba que coincide con SCENE_ORDER. */
-export const SCENE_IDS = ["superficie", "altura", "lanzamiento", "tercer-cuerpo"] as const satisfies readonly SceneId[];
+/** Las escenas para Zod: es la misma tupla que SCENE_ORDER, no una copia. */
+export const SCENE_IDS = SCENE_ORDER;
 
 /** El mismo tipo de acciones que el resto de la app (LabAction), validado con Zod. */
 export const labActionSchema = z.discriminatedUnion("type", [

@@ -39,9 +39,5 @@ export function validateAction(action: LabAction, currentScene: SceneId): Valida
     return { ok: true, action: { ...action, value: clampParam(spec, action.value) } };
   }
 
-  if ((action.type === "play" || action.type === "reset") && !SCENES[currentScene].run) {
-    return { ok: false, reason: "Esta escena es un medidor: no tiene animación." };
-  }
-
   return { ok: true, action };
 }

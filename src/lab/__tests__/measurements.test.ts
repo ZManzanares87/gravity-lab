@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { EARTH_RADIUS } from "@/physics/constants";
 import { measure } from "../measurements";
 import { SCENES } from "../scenes";
 
@@ -21,11 +22,14 @@ describe("medidas", () => {
     expect(tennis!.altitude).toBeCloseTo(10, 6);
   });
 
-  it("en la Estación Espacial, el peso es un 89 % del peso en el suelo", () => {
-    const altitude = SCENES.altura;
-    const [ground] = measure(altitude.buildBodies({ altitude: 0.01, objectMass: 1 }), altitude.G);
-    const [station] = measure(altitude.buildBodies({ altitude: 400, objectMass: 1 }), altitude.G);
-    expect(station!.force / ground!.force).toBeCloseTo(0.885, 2);
+  it("al doble de distancia del centro de la Tierra, la fuerza es un cuarto", () => {
+    const launch = SCENES.lanzamiento;
+    const [ground] = measure(launch.buildBodies({ speed: 0, angle: 0, launchAltitude: 0 }), launch.G);
+    const [far] = measure(
+      launch.buildBodies({ speed: 0, angle: 0, launchAltitude: EARTH_RADIUS / 1000 }),
+      launch.G,
+    );
+    expect(far!.force / ground!.force).toBeCloseTo(0.25, 6);
   });
 });
 
@@ -34,7 +38,7 @@ describe("medidas tras un contacto", () => {
     const { advance, createSimulation, snapshot } = await import("@/physics/simulation");
     const scene = SCENES.lanzamiento;
     const params = { speed: 3, angle: 0, launchAltitude: 500 };
-    const { simulation, contacts } = advance(createSimulation(scene.buildBodies(params), scene.run!.physics), 3600);
+    const { simulation, contacts } = advance(createSimulation(scene.buildBodies(params), scene.run.physics), 3600);
     expect(contacts).toHaveLength(1);
 
     const [projectile] = measure(snapshot(simulation).bodies, scene.G);

@@ -5,8 +5,8 @@ import type { Body } from "@/physics/types";
 import { length, sub } from "@/physics/vec2";
 import { SCENES } from "../scenes";
 
-function runScene(bodies: Body[], scene: { run?: { physics: { G: number; dt: number } } }, seconds: number) {
-  const physics = scene.run!.physics;
+function runScene(bodies: Body[], scene: { run: { physics: { G: number; dt: number } } }, seconds: number) {
+  const physics = scene.run.physics;
   return advance(createSimulation(bodies, physics), Math.round(seconds / physics.dt));
 }
 
@@ -74,7 +74,7 @@ describe("vista de Lanzamiento", () => {
     const extent = scene.view(params).maxX;
 
     // Simulamos 4 horas (más de dos vueltas) y medimos la distancia máxima al centro.
-    let simulation = createSimulation(scene.buildBodies(params), scene.run!.physics);
+    let simulation = createSimulation(scene.buildBodies(params), scene.run.physics);
     let farthest = 0;
     for (let minute = 0; minute < 240; minute++) {
       simulation = advance(simulation, 60).simulation;

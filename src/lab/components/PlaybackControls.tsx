@@ -1,6 +1,5 @@
 "use client";
 
-import { getScene } from "../scenes";
 import { useLabStore } from "../store";
 
 const SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
@@ -42,20 +41,11 @@ function RestartIcon() {
  * en el HTML (sr-only), así el lector de pantalla siempre dice lo mismo que se ve.
  */
 export function PlaybackControls() {
-  const sceneId = useLabStore((state) => state.sceneId);
   const playing = useLabStore((state) => state.playing);
   const finished = useLabStore((state) => state.finished);
   const speed = useLabStore((state) => state.speed);
   const dispatch = useLabStore((state) => state.dispatch);
   const setSpeed = useLabStore((state) => state.setSpeed);
-
-  if (!getScene(sceneId).run) {
-    return (
-      <p className="text-ink-soft">
-        Esta escena es un medidor: mueve la altura y observa cómo cambia la fuerza.
-      </p>
-    );
-  }
 
   const main = finished
     ? { label: "Repetir", icon: <RestartIcon /> }

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { SCENE_ORDER, SCENES } from "@/lab/scenes";
+import { SCENES } from "@/lab/scenes";
 import { buildLabContext, type LabSnapshot } from "../context";
-import { SCENE_IDS } from "../tools";
 
 const lab: LabSnapshot = {
   sceneId: "lanzamiento",
@@ -37,9 +36,5 @@ describe("contexto del tutor", () => {
 
   it("es corto: viaja con cada mensaje y cuesta dinero", () => {
     expect(context.length).toBeLessThan(3000);
-  });
-
-  it("la lista de escenas de la herramienta coincide con la del laboratorio", () => {
-    expect([...SCENE_IDS]).toEqual([...SCENE_ORDER]);
   });
 });

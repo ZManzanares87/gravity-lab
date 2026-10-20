@@ -16,7 +16,7 @@ interface DrawingContext {
  * Línea de cota de cada cuerpo hasta el cuerpo central, como en un plano:
  * - Si el cuerpo central se ve como suelo plano (Superficie): línea continua
  *   hasta el suelo, con la altura.
- * - Si se ve entero (Altura, Lanzamiento): línea discontinua hasta su centro,
+ * - Si se ve entero (Lanzamiento): línea discontinua hasta su centro,
  *   con la distancia r. Es la r de la fórmula: al centro, no al suelo.
  */
 export function drawMeasureLines(drawing: DrawingContext, bodies: readonly Body[], centralId = "tierra"): void {

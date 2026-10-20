@@ -4,7 +4,7 @@ import { EXPERIMENT_TITLES } from "@/lab/journey";
 import { SCENE_ORDER } from "@/lab/scenes";
 
 export const metadata: Metadata = {
-  title: "La gravedad en cuatro experimentos",
+  title: "La gravedad en tres experimentos",
 };
 
 const STEPS = [
@@ -36,7 +36,7 @@ export default function HomePage() {
             ¿Y por qué la Luna no?
           </h1>
           <p className="max-w-xl text-lg text-ink-soft sm:text-xl">
-            Con cuatro experimentos vas a descubrir, pieza a pieza, la ley que lo explica todo: desde
+            Con tres experimentos vas a descubrir, pieza a pieza, la ley que lo explica todo: desde
             una manzana que cae hasta la Luna girando. No hace falta saber física.
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-4">
@@ -89,7 +89,7 @@ export default function HomePage() {
 
       <section aria-labelledby="experimentos" className="flex flex-col gap-4">
         <h2 id="experimentos" className="text-xl font-bold">
-          Los cuatro experimentos
+          Los tres experimentos
         </h2>
         <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {SCENE_ORDER.map((id, i) => (

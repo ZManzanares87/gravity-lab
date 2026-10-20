@@ -59,18 +59,6 @@ describe("store del laboratorio", () => {
     expect(store.getState().runId).toBe(runBefore + 1);
   });
 
-  it("Comprobar en Altura coloca el objeto a 400 km y muestra la explicación", () => {
-    const store = createLabStore("altura");
-    store.getState().selectOption("nada");
-    store.getState().check();
-
-    const state = store.getState();
-    expect(state.params.altitude).toBe(400);
-    expect(state.revealed).toBe(true);
-    expect(state.predictions).toEqual([{ scene: "altura", option: "nada", correct: false }]);
-    expect(state.discovered).toEqual(["distancia"]);
-  });
-
   it("en Lanzamiento, la explicación aparece tras 30 minutos simulados", () => {
     const store = createLabStore("lanzamiento");
     store.getState().check();
@@ -81,10 +69,10 @@ describe("store del laboratorio", () => {
   });
 
   it("una acción rechazada no cambia nada", () => {
-    const store = createLabStore("altura");
+    const store = createLabStore("superficie");
     const before = store.getState();
-    const result = store.getState().dispatch({ type: "play" });
+    const result = store.getState().dispatch({ type: "setParam", key: "thirdMass", value: 1 });
     expect(result.ok).toBe(false);
-    expect(store.getState().playing).toBe(before.playing);
+    expect(store.getState().params).toEqual(before.params);
   });
 });

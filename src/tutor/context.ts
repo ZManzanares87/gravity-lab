@@ -47,13 +47,11 @@ export function buildLabContext(lab: LabSnapshot, live: SimState | null): string
     lines.push(`- ${id}: ${keys.join(", ")}.`);
   });
 
-  const status = !scene.run
-    ? "medidor sin animación"
-    : lab.finished
-      ? "terminado tras un contacto"
-      : lab.playing
-        ? "reproduciéndose"
-        : "en pausa";
+  const status = lab.finished
+    ? "terminado tras un contacto"
+    : lab.playing
+      ? "reproduciéndose"
+      : "en pausa";
   lines.push(`Estado: ${status}.`);
 
   if (live) {
