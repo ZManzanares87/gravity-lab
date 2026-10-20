@@ -46,16 +46,22 @@ function textOf(message: TutorMessage): string {
 /** Aplica una propuesta aceptada con las mismas acciones que usan los controles. */
 function applyProposal(input: ProposeExperimentInput): ProposeExperimentOutput {
   const { dispatch } = useLabStore.getState();
-  const rejected = input.actions.flatMap((action) => {
-    const result = dispatch(action);
-    return result.ok ? [] : [result.reason];
-  });
+  // La IA prepara y la persona ejecuta: play nunca se aplica desde aquí. Al final, la
+  // simulación queda en pausa y en su inicio, esperando a que la persona pulse Play.
+  const rejected = input.actions
+    .filter((action) => action.type !== "play")
+    .flatMap((action) => {
+      const result = dispatch(action);
+      return result.ok ? [] : [result.reason];
+    });
+  dispatch({ type: "pause" });
+  dispatch({ type: "reset" });
   return {
     accepted: true,
     detail:
       rejected.length === 0
-        ? "La persona ha aceptado. El laboratorio ya muestra el experimento; su estado actualizado llega en el contexto."
-        : `La persona ha aceptado, pero algunas acciones no eran válidas: ${rejected.join(" ")}`,
+        ? "La persona ha aceptado. El experimento está preparado y en pausa: lo verá cuando pulse Play. Su estado actualizado llega en el contexto."
+        : `La persona ha aceptado, pero algunas acciones no eran válidas: ${rejected.join(" ")} El resto está preparado y en pausa.`,
   };
 }
 
@@ -155,12 +161,12 @@ export function TutorPanel() {
   };
 
   return (
-    <section aria-labelledby="tutor-titulo" className="flex flex-col">
+    <section aria-labelledby="tutor-titulo" className="flex min-h-0 flex-1 flex-col">
       <h2 id="tutor-titulo" className="text-lg font-bold">
         Tutor
       </h2>
 
-      <div ref={listRef} className="mt-3 max-h-[50vh] min-h-48 space-y-4 overflow-y-auto pr-1">
+      <div ref={listRef} className="mt-3 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1 sm:max-h-[50vh] sm:min-h-48 sm:flex-none">
         {messages.map((message) => {
           // Un mensaje automático se muestra como aviso, no como si lo hubiera escrito la persona.
           const auto = message.metadata?.auto;
@@ -175,7 +181,10 @@ export function TutorPanel() {
           }
           return (
             <div key={message.id} className={message.role === "user" ? "ml-6 bg-ink/5 p-3" : ""}>
-              <p className="text-sm font-bold text-ink-soft">{message.role === "user" ? "Tú" : "Tutor"}</p>
+              {/* "Tutor" ya es el título del panel: aquí solo lo oye el lector de pantalla. */}
+              <p className={message.role === "user" ? "text-sm font-bold text-ink-soft" : "sr-only"}>
+                {message.role === "user" ? "Tú" : "Tutor"}
+              </p>
               {message.parts.map((part, index) => {
                 if (part.type === "text") {
                   return (
@@ -280,7 +289,7 @@ function Proposal({ part, sceneId, onAnswer }: ProposalProps) {
     case "output-available":
       return (
         <p className="mt-2 text-sm text-ink-soft">
-          {part.output.accepted ? "✓ Propuesta aceptada." : "Propuesta rechazada."}
+          {part.output.accepted ? "✓ Todo preparado: dale al Play para verlo." : "Propuesta rechazada."}
         </p>
       );
     case "output-error":

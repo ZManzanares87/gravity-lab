@@ -19,7 +19,7 @@ export default function LabPage() {
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pt-6 pb-28">
       <ExperimentHeader />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:grid-rows-[auto_1fr] lg:items-start">
-        <section aria-label="Simulación" className="lg:col-start-1 lg:row-start-1">
+        <section id="simulacion" aria-label="Simulación" className="lg:col-start-1 lg:row-start-1">
           <LabCanvas />
         </section>
 
