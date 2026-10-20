@@ -71,7 +71,6 @@ export const EXPERIMENTS: Record<SceneId, Experiment> = {
       { type: "setParam", key: "thirdMass", value: 0.5 },
       { type: "setParam", key: "thirdDistance", value: 1.5 },
       { type: "setParam", key: "thirdSpeed", value: 0.4 },
-      { type: "setParam", key: "starMass", value: 1 },
       { type: "reset" },
       { type: "play" },
     ],

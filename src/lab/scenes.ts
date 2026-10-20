@@ -20,6 +20,8 @@ export interface ParamSpec<P extends Params> {
   readonly max: number;
   /** "log" para rangos enormes, como las masas, de 10 g a 1000 kg. */
   readonly scale: "linear" | "log";
+  /** Extremos en palabras ("Cerca", "Lejos"). Si los hay, no se muestra el número: es para escenas en unidades abstractas. */
+  readonly ends?: readonly [string, string];
 }
 
 /** El rectángulo del mundo que debe verse en pantalla. */
@@ -177,15 +179,16 @@ const lanzamiento = defineScene({
 
 // ── Tercer cuerpo (unidades abstractas, como la galería) ────────────
 const STAR_RADIUS = 0.05;
+/** A y B pesan siempre lo mismo: lo que importa es cuánto pesa la tercera comparada con ellas. */
+const STAR_MASS = 1;
 
 const tercerCuerpo = defineScene({
   title: "Tercer cuerpo",
-  defaults: { thirdMass: 0, thirdDistance: 1.5, thirdSpeed: 0.4, starMass: 1 },
+  defaults: { thirdMass: 0, thirdDistance: 1.5, thirdSpeed: 0.4 },
   params: [
-    { key: "thirdMass", label: "Masa de la tercera estrella", unit: "", min: 0, max: 1, scale: "linear" },
-    { key: "thirdDistance", label: "Distancia de la tercera estrella", unit: "", min: 1, max: 3, scale: "linear" },
-    { key: "thirdSpeed", label: "Velocidad de la tercera estrella", unit: "", min: 0, max: 1, scale: "linear" },
-    { key: "starMass", label: "Masa de las estrellas A y B", unit: "", min: 0.2, max: 2, scale: "linear" },
+    { key: "thirdMass", label: "Masa de la tercera estrella", unit: "", min: 0, max: 1, scale: "linear", ends: ["Ninguna", "Como A y B"] },
+    { key: "thirdDistance", label: "Distancia de la tercera estrella", unit: "", min: 1, max: 3, scale: "linear", ends: ["Cerca", "Lejos"] },
+    { key: "thirdSpeed", label: "Velocidad de la tercera estrella", unit: "", min: 0, max: 1, scale: "linear", ends: ["Quieta", "Rápida"] },
   ],
   G: 1,
   run: {
@@ -193,12 +196,12 @@ const tercerCuerpo = defineScene({
     timeScale: 1,
     clock: { unit: "", secondsPerUnit: 1 },
   },
-  buildBodies: ({ thirdMass, thirdDistance, thirdSpeed, starMass }) => {
+  buildBodies: ({ thirdMass, thirdDistance, thirdSpeed }) => {
     // Órbita circular de dos estrellas iguales separadas 1: v = √(G·m / 2d).
-    const binarySpeed = Math.sqrt(starMass / 2);
+    const binarySpeed = Math.sqrt(STAR_MASS / 2);
     const binary: Body[] = [
-      { id: "a", name: "Estrella A", mass: starMass, radius: STAR_RADIUS, position: vec(-0.5, 0), velocity: vec(0, -binarySpeed) },
-      { id: "b", name: "Estrella B", mass: starMass, radius: STAR_RADIUS, position: vec(0.5, 0), velocity: vec(0, binarySpeed) },
+      { id: "a", name: "Estrella A", mass: STAR_MASS, radius: STAR_RADIUS, position: vec(-0.5, 0), velocity: vec(0, -binarySpeed) },
+      { id: "b", name: "Estrella B", mass: STAR_MASS, radius: STAR_RADIUS, position: vec(0.5, 0), velocity: vec(0, binarySpeed) },
     ];
     // Con masa 0 la tercera estrella no existe: ni siquiera como cuerpo de prueba.
     if (thirdMass <= 0) return binary;

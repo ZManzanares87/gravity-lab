@@ -19,12 +19,16 @@ interface DrawingContext {
  *   hasta el suelo, con la altura.
  * - Si se ve entero (Lanzamiento): línea discontinua hasta su centro,
  *   con la distancia r. Es la r de la fórmula: al centro, no al suelo.
+ *
+ * Devuelve esa distancia al centro (o null) para mostrarla también fuera del
+ * canvas: así no desaparece cuando el cuerpo se sale del dibujo.
  */
-export function drawMeasureLines(drawing: DrawingContext, bodies: readonly Body[], centralId = "tierra"): void {
+export function drawMeasureLines(drawing: DrawingContext, bodies: readonly Body[], centralId = "tierra"): string | null {
   const { context, toScreen, scale, width, ink, fontFamily, flatThresholdPx } = drawing;
   const central = bodies.find((body) => body.id === centralId);
-  if (!central) return;
+  if (!central) return null;
   const flat = central.radius * scale > flatThresholdPx;
+  let centerDistance: string | null = null;
 
   context.save();
   context.strokeStyle = ink;
@@ -51,9 +55,9 @@ export function drawMeasureLines(drawing: DrawingContext, bodies: readonly Body[
     const end = flat
       ? toScreen({ x: central.position.x + ux * central.radius, y: central.position.y + uy * central.radius })
       : toScreen(central.position);
-    const label = flat
-      ? formatDistance(altitude)
-      : `r = ${formatDistance(distance)}`;
+    const r = formatDistance(distance);
+    if (!flat) centerDistance = r;
+    const label = flat ? formatDistance(altitude) : `r = ${r}`;
 
     context.setLineDash(flat ? [] : [6, 5]);
     context.beginPath();
@@ -82,4 +86,5 @@ export function drawMeasureLines(drawing: DrawingContext, bodies: readonly Body[
   });
 
   context.restore();
+  return centerDistance;
 }

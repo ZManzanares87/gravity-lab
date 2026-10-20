@@ -28,6 +28,7 @@ const FAR = 10_000;
 export function LabCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const clockRef = useRef<HTMLOutputElement>(null);
+  const distanceRef = useRef<HTMLSpanElement>(null);
   const runnerRef = useRef<SimulationRunner | null>(null);
   const sceneId = useLabStore((state) => state.sceneId);
   const runId = useLabStore((state) => state.runId);
@@ -188,7 +189,7 @@ export function LabCanvas() {
       context.globalAlpha = 1;
 
       // Línea de cota: altura sobre el suelo o distancia al centro (la r de la fórmula).
-      drawMeasureLines(
+      const centerDistance = drawMeasureLines(
         { context, toScreen, scale, width, ink, fontFamily, flatThresholdPx: FLAT_GROUND_RADIUS_PX },
         state.bodies,
       );
@@ -203,6 +204,9 @@ export function LabCanvas() {
       if (clockRef.current && now - lastClockUpdate > 250) {
         const value = formatNumber(state.time / clock.secondsPerUnit, 3);
         clockRef.current.textContent = `t = ${value}${clock.unit ? ` ${clock.unit}` : ""}`;
+        if (distanceRef.current) {
+          distanceRef.current.textContent = centerDistance ? `Distancia desde el centro de la Tierra: ${centerDistance}` : "";
+        }
         lastClockUpdate = now;
       }
     };
@@ -268,7 +272,8 @@ export function LabCanvas() {
       />
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <PlaybackControls />
-        <output ref={clockRef} className="ml-auto tabular-nums text-ink-soft" />
+        <span ref={distanceRef} className="ml-auto tabular-nums text-ink-soft" />
+        <output ref={clockRef} className="tabular-nums text-ink-soft" />
       </div>
       <ContactMessage />
     </div>

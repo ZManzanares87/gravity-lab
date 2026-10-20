@@ -28,6 +28,11 @@ function fromSlider(spec: ParamSpec<Params>, position: number): number {
 }
 
 function valueText(spec: ParamSpec<Params>, value: number): string {
+  // Sin unidades que entender, el lector de pantalla oye la posición entre los dos extremos.
+  if (spec.ends) {
+    const percent = Math.round((toSlider(spec, value) / STEPS) * 100);
+    return `${percent} %, de «${spec.ends[0]}» a «${spec.ends[1]}»`;
+  }
   return `${formatNumber(value, 4)}${spec.unit ? ` ${spec.unit}` : ""}`;
 }
 
@@ -66,7 +71,7 @@ function ParamControl({ spec, value, onChange }: ParamControlProps) {
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="flex items-baseline justify-between gap-3">
         <span>{spec.label}</span>
-        <span className="font-bold whitespace-nowrap tabular-nums">{text}</span>
+        {!spec.ends && <span className="font-bold whitespace-nowrap tabular-nums">{text}</span>}
       </label>
       <input
         id={id}
@@ -79,6 +84,12 @@ function ParamControl({ spec, value, onChange }: ParamControlProps) {
         onChange={(event) => onChange(fromSlider(spec, Number(event.target.value)))}
         className="h-8 w-full accent-body-a"
       />
+      {spec.ends && (
+        <div aria-hidden="true" className="flex justify-between text-sm text-ink-soft">
+          <span>{spec.ends[0]}</span>
+          <span>{spec.ends[1]}</span>
+        </div>
+      )}
     </div>
   );
 }
