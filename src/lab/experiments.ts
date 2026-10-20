@@ -35,7 +35,7 @@ export const EXPERIMENTS: Record<SceneId, Experiment> = {
     check: [{ type: "reset" }, { type: "play" }],
     reveal: { on: "contact" },
     explanation:
-      "Llegan a la vez. La Tierra tira con más fuerza de la bola de bolos (pesa unas 120 veces más), pero también cuesta 120 veces más ponerla en movimiento. Las dos cosas se compensan exactamente: la gravedad acelera igual a cualquier objeto, tenga la masa que tenga. En la vida real, una pluma cae más despacio por culpa del aire, pero aquí no hay aire.",
+      "Llegan a la vez. La Tierra tira más fuerte de la bola de bolos, pero también cuesta más ponerla en movimiento, y una cosa compensa la otra.",
     discovers: "masa",
   },
   lanzamiento: {
@@ -56,8 +56,8 @@ export const EXPERIMENTS: Record<SceneId, Experiment> = {
     ],
     reveal: { on: "time", after: 30 * 60 },
     explanation:
-      "Da vueltas sin llegar al suelo, aunque en realidad está cayendo todo el tiempo. Mientras cae, avanza tan deprisa que la superficie de la Tierra, que es curva, se aleja al mismo ritmo. Eso es una órbita, y por eso flotan los astronautas: ellos y la Estación caen juntos. Es la misma gravedad que hace caer una manzana y la que mantiene a la Luna girando. Prueba también con 2 km/s y con 12 km/s.",
-    discovers: "universal",
+      "Da vueltas sin tocar el suelo: está cayendo todo el rato, pero avanza tan deprisa que la Tierra, que es curva, se va quedando por debajo. Así flotan los astronautas: caen a la vez que su nave. La Luna cae igual, pero está tan lejos que la Tierra tira de ella mucho más flojo.",
+    discovers: "distancia",
   },
   "tercer-cuerpo": {
     question:
@@ -78,7 +78,7 @@ export const EXPERIMENTS: Record<SceneId, Experiment> = {
     ],
     reveal: { on: "time", after: 10 },
     explanation:
-      "Se vuelve imprevisible. Con dos cuerpos, la ley de Newton tiene una solución exacta y la órbita se repite para siempre. Con tres, cada estrella tira de las otras dos a la vez y no hay una fórmula general: un cambio diminuto en el punto de partida acaba en un movimiento completamente distinto. Aun así, existen configuraciones muy concretas en las que tres cuerpos repiten su recorrido. Puedes verlas en la galería.",
-    discovers: null,
+      "Se vuelve imprevisible: cada estrella tira de las otras dos a la vez y no hay una fórmula que diga dónde acabarán. Solo unas pocas posiciones de partida se repiten para siempre, y las tienes en la galería.",
+    discovers: "universal",
   },
 };

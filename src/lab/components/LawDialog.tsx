@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { LAW_PARTS as PARTS } from "../lawParts";
+import { LAW_PARTS as PARTS, whereDiscovered } from "../lawParts";
 import { useLabStore } from "../store";
 
 /**
@@ -42,14 +42,17 @@ export function LawDialog() {
         <ul className="mt-6 space-y-4">
           {PARTS.map((part) => {
             const done = discovered.includes(part.id);
+            const where = whereDiscovered(part.id);
             return (
               <li key={part.id}>
                 <p>
                   <strong>{part.symbol}:</strong> {part.text}
                 </p>
-                <p className="text-sm text-ink-soft">
-                  {done ? `✓ Lo has descubierto en ${part.where}.` : `Por descubrir en ${part.where}.`}
-                </p>
+                {where && (
+                  <p className="text-sm text-ink-soft">
+                    {done ? `✓ Lo has descubierto en ${where}.` : `Por descubrir en ${where}.`}
+                  </p>
+                )}
               </li>
             );
           })}
