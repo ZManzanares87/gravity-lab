@@ -16,14 +16,17 @@ export function ExperimentHeader() {
 
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
-      <div className="flex min-w-0 flex-[1_1_32rem] flex-col gap-2">
+      <div className="flex min-w-0 flex-[1_1_32rem] flex-col gap-2 lg:gap-1">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <p className="text-ink-soft">
           Experimento{" "}
           <strong className="text-ink">
             {index + 1} de {SCENE_ORDER.length}
           </strong>
         </p>
-        <h1 id="experimento-actual" tabIndex={-1} className="text-2xl leading-tight font-bold sm:text-3xl">
+          <LawDialog />
+        </div>
+        <h1 id="experimento-actual" tabIndex={-1} className="text-2xl leading-tight font-bold sm:text-3xl lg:text-2xl">
           {EXPERIMENT_TITLES[sceneId]}
         </h1>
         <nav aria-label="Experimentos">
@@ -32,13 +35,13 @@ export function ExperimentHeader() {
               const current = id === sceneId;
               return (
                 <li key={id}>
-                  {/* 44 px de alto para tocar con el dedo; la barra visible es fina. */}
+                  {/* 44 px de alto para tocar con el dedo (32 en escritorio, con ratón); la barra visible es fina. */}
                   <button
                     type="button"
                     aria-label={`Experimento ${i + 1}: ${EXPERIMENT_TITLES[id]}`}
                     aria-current={current ? "step" : undefined}
                     onClick={() => dispatch({ type: "loadScene", scene: id })}
-                    className="group flex h-11 w-full items-center"
+                    className="group flex h-11 w-full items-center lg:h-8"
                   >
                     <span
                       className={`block h-1.5 w-full ${
@@ -52,7 +55,6 @@ export function ExperimentHeader() {
           </ol>
         </nav>
       </div>
-      <LawDialog />
     </div>
   );
 }

@@ -32,15 +32,15 @@ export function TutorDock() {
 
   return (
     <>
+      {/* Móvil: pantalla completa. Tablet: flotante. Escritorio: desplegable bajo la guía, se abre con la barra. */}
       <div
         id="tutor-panel"
         role="region"
         aria-label="Tutor"
-        hidden={!open}
         onKeyDown={(event) => {
           if (event.key === "Escape") close();
         }}
-        className="fixed inset-0 z-50 flex flex-col bg-paper p-4 sm:inset-auto sm:right-4 sm:bottom-20 sm:z-40 sm:w-[24rem] sm:border sm:border-ink sm:shadow-lg"
+        className={`${open ? "flex" : "hidden"} fixed inset-0 z-50 flex-col bg-paper p-4 sm:inset-auto sm:right-4 sm:bottom-20 sm:z-40 sm:w-[24rem] sm:border sm:border-ink sm:shadow-lg lg:static lg:mt-4 lg:w-auto lg:shadow-none`}
       >
         {/* En móvil el panel ocupa toda la pantalla: se cierra desde aquí. */}
         <button
@@ -59,7 +59,7 @@ export function TutorDock() {
         aria-expanded={open}
         aria-controls="tutor-panel"
         onClick={() => (open ? close() : setOpen(true))}
-        className={`fixed right-4 bottom-4 z-50 ${open ? "hidden sm:inline-flex" : "inline-flex"} min-h-12 items-center gap-2 bg-ink px-5 font-bold text-paper shadow-lg hover:bg-ink/85`}
+        className={`fixed right-4 bottom-4 z-50 ${open ? "hidden sm:inline-flex" : "inline-flex"} lg:static lg:mt-4 lg:w-full lg:justify-center lg:shadow-none min-h-12 items-center gap-2 bg-ink px-5 font-bold text-paper shadow-lg hover:bg-ink/85`}
       >
         <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />

@@ -97,12 +97,31 @@ export function LabCanvas() {
       });
 
       /** Etiqueta a la derecha de los cuerpos de la derecha y a la izquierda de los de la izquierda. */
+      type LabelBox = { x: number; y: number; w: number; h: number };
+      // Etiquetas ya dibujadas en este fotograma: así un nombre nunca pisa a otro.
+      const placed: LabelBox[] = [];
       const drawLabel = (text: string, x: number, y: number, gap: number) => {
-        const onRight = x >= width / 2;
-        context.textAlign = onRight ? "left" : "right";
-        context.fillStyle = ink;
-        context.fillText(text, onRight ? x + gap : x - gap, y - gap);
+        const w = context.measureText(text).width;
+        const preferRight = x >= width / 2;
+        // Por orden: arriba en el lado con más espacio, arriba en el otro, abajo en uno y otro.
+        const candidates = [
+          [preferRight, false],
+          [!preferRight, false],
+          [preferRight, true],
+          [!preferRight, true],
+        ] as const;
+        const boxes = candidates.map(([right, below]) => {
+          const baseline = below ? y + gap + 12 : y - gap;
+          return { x: right ? x + gap : x - gap - w, y: baseline - 12, w, h: 16, baseline };
+        });
+        const overlaps = (a: LabelBox, b: LabelBox) =>
+          a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+        const chosen = boxes.find((box) => placed.every((other) => !overlaps(box, other))) ?? boxes[0];
+        if (!chosen) return;
+        placed.push(chosen);
         context.textAlign = "left";
+        context.fillStyle = ink;
+        context.fillText(text, chosen.x, chosen.baseline);
       };
 
       /** Dibuja un cuerpo enorme como un semiplano: su superficie vista de cerca. */
@@ -277,7 +296,7 @@ export function LabCanvas() {
         ref={canvasRef}
         role="img"
         aria-label={`Simulación del experimento «${EXPERIMENT_TITLES[sceneId]}»`}
-        className="block aspect-[4/3] w-full border border-ink/20 bg-paper"
+        className="block aspect-[4/3] w-full border border-ink/20 bg-paper lg:aspect-auto lg:h-[max(18rem,calc(100dvh-15rem))]"
       />
       {/* Datos de la simulación, como el pie de una figura: una línea en escritorio, en columna en móvil. */}
       <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6">

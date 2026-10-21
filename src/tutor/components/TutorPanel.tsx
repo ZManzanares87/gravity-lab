@@ -169,7 +169,7 @@ export function TutorPanel() {
         Tutor
       </h2>
 
-      <div ref={listRef} className="mt-3 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1 sm:max-h-[50vh] sm:min-h-48 sm:flex-none">
+      <div ref={listRef} className="mt-3 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1 sm:max-h-[50vh] sm:min-h-48 sm:flex-none lg:min-h-0">
         {messages.map((message) => {
           // Un mensaje automático no se muestra: la guía ya dice qué predijo y si acertó.
           if (message.role === "user" && message.metadata?.auto) return null;

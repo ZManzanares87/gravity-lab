@@ -54,7 +54,7 @@ export function ExperimentPanel() {
   return (
     <section
       aria-labelledby="guia-titulo"
-      className="flex flex-col gap-4 border border-ink bg-paper p-5"
+      className="flex flex-col gap-4 border border-ink bg-paper p-5 lg:gap-3 lg:p-4"
     >
       <h2 id="guia-titulo" className="sr-only">
         Guía del experimento
@@ -90,7 +90,7 @@ export function ExperimentPanel() {
       {phase === "predict" ? (
         <>
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-lg leading-snug font-bold">{experiment.question}</legend>
+            <legend className="mb-2 text-lg leading-snug font-bold lg:text-base lg:font-semibold">{experiment.question}</legend>
             {experiment.options.map((option) => (
               <label
                 key={option.id}
