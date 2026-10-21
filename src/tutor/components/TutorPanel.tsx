@@ -23,6 +23,8 @@ import { TUTOR_TOOLS, type ProposeExperimentInput, type ProposeExperimentOutput 
 /** Un mensaje enviado por la app, no escrito por la persona: tras cada predicción. */
 interface TutorMetadata {
   readonly auto?: { readonly chosen: string; readonly correct: boolean };
+  /** Aviso automático: la persona ha visto el experimento que propuso el tutor. */
+  readonly watched?: true;
 }
 
 type TutorMessage = UIMessage<TutorMetadata, UIDataTypes, InferUITools<typeof TUTOR_TOOLS>>;
@@ -59,6 +61,7 @@ function applyProposal(input: ProposeExperimentInput): ProposeExperimentOutput {
   ];
   dispatch({ type: "pause" });
   dispatch({ type: "reset" });
+  useLabStore.getState().prepareProposal();
   return {
     accepted: true,
     detail:
@@ -118,6 +121,18 @@ export function TutorPanel() {
   // Tras cada predicción, el tutor interviene sin que se lo pidan. Si falló,
   // explica desde la idea que tenía; si acertó, sube el nivel con un reto.
   // El marcador va en el mensaje para que el tutor ajuste la dificultad.
+  // Cuando la persona ya ha visto el experimento que preparó el tutor, el tutor retoma la conversación.
+  const proposalRun = useLabStore((state) => state.proposalRun);
+  useEffect(() => {
+    if (proposalRun !== "watched" || busy) return;
+    useLabStore.getState().acknowledgeWatched();
+    void sendMessage({
+      text: "(Aviso automático de la app: la persona no ha escrito esto.) La persona acaba de ver el experimento que le propusiste.",
+      metadata: { watched: true },
+    });
+  }, [proposalRun, busy, sendMessage]);
+
+
   useEffect(() => {
     if (predictions.length <= seen.current) {
       seen.current = predictions.length;
@@ -172,7 +187,7 @@ export function TutorPanel() {
       <div ref={listRef} className="mt-3 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1 sm:max-h-[50vh] sm:min-h-48 sm:flex-none lg:min-h-0">
         {messages.map((message) => {
           // Un mensaje automático no se muestra: la guía ya dice qué predijo y si acertó.
-          if (message.role === "user" && message.metadata?.auto) return null;
+          if (message.role === "user" && (message.metadata?.auto || message.metadata?.watched)) return null;
           return (
             <div key={message.id} className={message.role === "user" ? "ml-6 bg-ink/5 p-3" : ""}>
               {/* "Tutor" ya es el título del panel: aquí solo lo oye el lector de pantalla. */}

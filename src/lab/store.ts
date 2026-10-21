@@ -30,6 +30,8 @@ export interface LabState {
   readonly selectedOption: string | null;
   /** En qué paso de la guía está el experimento actual. */
   readonly phase: Phase;
+  /** Experimento del tutor: "prepared" al aceptarlo, "watched" cuando la persona ya lo ha visto. */
+  readonly proposalRun: ProposalRun;
 
   // Lo que dura toda la sesión (no se reinicia al cambiar de escena).
   readonly predictions: readonly Prediction[];
@@ -43,6 +45,10 @@ export interface LabState {
   check(): void;
   /** Botón "Entender por qué": muestra la explicación cuando ya se ha visto el resultado. */
   understand(): void;
+  /** El tutor ha preparado un experimento: avisar cuando la persona lo haya visto. */
+  prepareProposal(): void;
+  /** El tutor ya ha reaccionado a lo que la persona ha visto. */
+  acknowledgeWatched(): void;
   /** Avisos del canvas. */
   reportContacts(contacts: readonly Contact[]): void;
   reportTime(time: number): void;
@@ -54,6 +60,8 @@ export interface LabState {
  */
 export type Phase = "predict" | "watch" | "ready" | "understand";
 
+export type ProposalRun = "idle" | "prepared" | "watched";
+
 /** Todo lo que depende de la escena y se limpia al cargar otra. */
 function sceneState(sceneId: SceneId) {
   return {
@@ -64,6 +72,7 @@ function sceneState(sceneId: SceneId) {
     contacts: [] as readonly Contact[],
     selectedOption: null,
     phase: "predict" as Phase,
+    proposalRun: "idle" as ProposalRun,
   };
 }
 
@@ -152,15 +161,21 @@ export function createLabStore(initialScene: SceneId = "superficie") {
 
       understand: () => reveal(),
 
+      prepareProposal: () => set({ proposalRun: "prepared" }),
+
+      acknowledgeWatched: () => set({ proposalRun: "idle" }),
+
       reportContacts: (contacts) => {
         set({ playing: false, finished: true, contacts });
         // Solo cuenta si se llegó por "Comprobar": reproducir libremente no se salta la predicción.
         if (get().phase === "watch") set({ phase: "ready" });
+        if (get().proposalRun === "prepared") set({ proposalRun: "watched" });
       },
 
       reportTime: (time) => {
         const { reveal: rule } = EXPERIMENTS[get().sceneId];
         if (get().phase === "watch" && rule.on === "time" && time >= rule.after) set({ phase: "ready" });
+        if (get().proposalRun === "prepared" && rule.on === "time" && time >= rule.after) set({ proposalRun: "watched" });
       },
     };
   });

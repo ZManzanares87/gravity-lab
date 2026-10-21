@@ -116,4 +116,23 @@ describe("store del laboratorio", () => {
     expect(store.getState().selectedOption).toBe("bola");
     expect(store.getState().params).toEqual(SCENES.superficie.defaults);
   });
+
+  it("avisa cuando la persona ha visto el experimento que preparó el tutor", () => {
+    const store = createLabStore("superficie");
+    store.getState().prepareProposal();
+    expect(store.getState().proposalRun).toBe("prepared");
+    store.getState().reportContacts([{ bodyId: "bola", otherBodyId: "tierra", time: 1.4 }]);
+    expect(store.getState().proposalRun).toBe("watched");
+    store.getState().acknowledgeWatched();
+    expect(store.getState().proposalRun).toBe("idle");
+  });
+
+  it("en la órbita, el experimento del tutor se da por visto tras 30 minutos simulados", () => {
+    const store = createLabStore("lanzamiento");
+    store.getState().prepareProposal();
+    store.getState().reportTime(10 * 60);
+    expect(store.getState().proposalRun).toBe("prepared");
+    store.getState().reportTime(30 * 60);
+    expect(store.getState().proposalRun).toBe("watched");
+  });
 });
