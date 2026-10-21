@@ -24,9 +24,7 @@ export function ContactMessage() {
     const names = contacts.map((contact) => nameOf(contact.bodyId));
     const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} y ${names.at(-1)}` : names[0];
     const clock = scene.run.clock;
-    const time = clock
-      ? `${formatNumber(first.time / clock.secondsPerUnit, 3)}${clock.unit ? ` ${clock.unit}` : ""}`
-      : "";
+    const time = `${formatNumber(first.time / clock.secondsPerUnit, 3)}${clock.unit ? ` ${clock.unit}` : ""}`;
     const together = names.length > 1 ? ", a la vez" : "";
 
     message =

@@ -58,7 +58,7 @@ function defineScene<P extends Params>(scene: SceneDefinition<P>): SceneDefiniti
 const R = EARTH_RADIUS;
 const DEGREES = Math.PI / 180;
 
-export const EARTH: Body = {
+const EARTH: Body = {
   id: "tierra",
   name: "Tierra",
   mass: EARTH_MASS,
@@ -130,7 +130,7 @@ const superficie = defineScene({
  * Con la energía y el momento angular del lanzamiento se calcula el punto
  * más alejado de la elipse (el apogeo), sin tener que simular nada.
  */
-export function launchExtent({ speed, angle, launchAltitude }: Params): number {
+function launchExtent({ speed, angle, launchAltitude }: Params): number {
   const mu = G_SI * EARTH_MASS;
   const r0 = R + (launchAltitude ?? 0) * 1000;
   const v = (speed ?? 0) * 1000;
@@ -249,7 +249,9 @@ export function clampParam(spec: { readonly min: number; readonly max: number },
  * defecto de la escena y valida cada cambio: su forma es la correcta.
  */
 export function getScene(id: SceneId): SceneDefinition<Params> {
-  // TypeScript no puede comprobarlo por sí solo (keyof hace incompatibles los tipos
-  // genéricos); la forma de los parámetros la garantiza el store.
+  // Cada escena tiene sus propias claves de parámetros (height, speed…), y TypeScript no deja
+  // tratarla como una escena con claves cualesquiera, porque esas claves aparecen en posiciones
+  // como keyof P. El cast es seguro porque los parámetros siempre vienen del store, que parte
+  // de los valores por defecto de la escena y valida cada cambio.
   return SCENES[id] as unknown as SceneDefinition<Params>;
 }

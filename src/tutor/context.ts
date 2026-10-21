@@ -48,7 +48,6 @@ export function buildLabContext(lab: LabSnapshot, live: SimState | null): string
     );
   });
 
-
   const status = lab.finished
     ? "terminado tras un contacto"
     : lab.playing

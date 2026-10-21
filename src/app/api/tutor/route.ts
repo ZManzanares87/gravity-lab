@@ -16,8 +16,19 @@ const MAX_OUTPUT_TOKENS = 600;
 /** 30 mensajes por hora y por IP (aproximado en serverless, ver rateLimit.ts). */
 const limiter = createRateLimiter({ limit: 30, windowMs: 60 * 60 * 1000 });
 
+/**
+ * Predicado mínimo para messages: role user o assistant (nunca system).
+ * Rechazar "system" impide que quien llame a la API cuele instrucciones al modelo
+ * mezclándolas con los mensajes de la conversación.
+ */
+function isUIMessage(value: unknown): value is UIMessage {
+  if (typeof value !== "object" || value === null) return false;
+  const { role, parts } = value as Record<string, unknown>;
+  return (role === "user" || role === "assistant") && Array.isArray(parts);
+}
+
 const requestSchema = z.object({
-  messages: z.array(z.custom<UIMessage>()),
+  messages: z.array(z.custom<UIMessage>(isUIMessage)),
   labContext: z.string(),
 });
 

@@ -6,7 +6,8 @@ import { length, lengthSquared, sub } from "./vec2";
  *
  * En un sistema donde solo actúa la gravedad, la energía total no cambia.
  * Por eso sirve para medir lo bien que trabaja el integrador: cuanto menos
- * varíe, más fiel es la simulación.
+ * varíe, más fiel es la simulación. La usan los tests para comprobar que
+ * el integrador conserva la energía a lo largo de la simulación.
  */
 export function totalEnergy(bodies: readonly Body[], G: number): number {
   const kinetic = bodies.reduce(

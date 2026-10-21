@@ -83,6 +83,7 @@ El paso no se guarda aparte: el store tiene una sola **fase** (`predict`, `watch
 - Bajo el dibujo, una franja de datos: el **tiempo** y, en la órbita, la **distancia desde el centro de la Tierra**. Así siguen visibles aunque el proyectil salga del dibujo. La distancia sale del mismo cálculo que la cota del canvas.
 - Las etiquetas de los cuerpos buscan un hueco libre, así que dos cuerpos en el mismo sitio no se pisan el nombre.
 - La escena de tres cuerpos usa unidades abstractas (como la galería), así que sus deslizadores muestran **palabras en los extremos** («Cerca … Lejos», «0 … Como A y B») en lugar de números sin sentido.
+- En tres cuerpos, las estrellas son puntuales y la gravedad entre ellas se suaviza a distancias muy cortas, así que se cruzan sin chocar. El sistema arranca sin impulso neto, de modo que se queda a la vista. Como usa unidades abstractas, esta escena no muestra reloj.
 
 ---
 
@@ -100,6 +101,7 @@ AI SDK de Vercel con `@ai-sdk/anthropic`, en la ruta `/api/tutor`, con respuesta
   - Si aciertas, te felicita y te deja elegir entre ir un paso más allá o pasar al siguiente experimento.
 - **Si le preguntas, responde primero.** Si el laboratorio no puede mostrar lo que preguntas, te explica qué pasaría y te dice que aquí todavía no se puede probar, sin inventar cifras.
 - **No adelanta la explicación** mientras miras la simulación, ni propone experimentos antes de que hayas predicho.
+- **Retoma la conversación tras sus experimentos**: cuando la persona ya ha visto el experimento que le preparó (al tocar el suelo, tras un rato de órbita…), le pregunta qué ha visto. No interrumpe al pulsar Play.
 - **Usa los conceptos con precisión**: velocidad, fuerza, masa y peso no son lo mismo, y si los confundes te lo aclara.
 
 ### Cómo se adapta
@@ -126,6 +128,7 @@ Estas dos últimas reglas no dependen del prompt: las garantiza el código (`pre
 - El contexto que viaja con cada mensaje describe solo el experimento actual: pregunta, controles con sus rangos, medidas del motor, fase, predicciones y piezas descubiertas.
 - **No inventa números**: usa los que calcula el motor.
 - **Prompt injection**: el contexto se trata como dato, no como instrucción, y el prompt lo dice explícitamente. Además, cualquier acción de la IA pasa por la misma validación que las de la persona.
+- **Solo mensajes de la persona o del tutor**: la ruta rechaza cualquier mensaje con rol de sistema, para que nadie pueda colar instrucciones llamando a la API directamente.
 
 ### Costes y protección
 
@@ -162,12 +165,13 @@ Estas dos últimas reglas no dependen del prompt: las garantiza el código (`pre
 
 La energía se conserva mejor que 10⁻¹¹ en todas.
 
-**69 tests**, entre ellos:
+**73 tests**, entre ellos:
 - g ≈ 9,8 m/s² en la superficie, y la aceleración no depende de la masa.
 - Al doble de distancia del centro de la Tierra, un cuarto de la fuerza: la regla exacta que enseña la app.
 - Tiempo de caída √(2h/g), y dos bolas que tocan el suelo a la vez.
 - Una órbita circular que cierra, y el cierre y la energía de las seis órbitas de la galería.
-- La máquina de estados del experimento, la validación de acciones, las garantías de las propuestas del tutor, el contexto del tutor y el límite de peticiones.
+- En tres cuerpos, que las estrellas no chocan y que el sistema arranca sin impulso neto.
+- La máquina de estados del experimento, la validación de acciones, las garantías de las propuestas del tutor, el aviso cuando la persona ha visto su experimento, el contexto del tutor y el límite de peticiones.
 
 ---
 
@@ -216,6 +220,7 @@ src/
 **Física y simulación**
 - **Yoshida frente a Verlet y RK4**: Verlet no cerraba las órbitas complejas. RK4 no es simpléctico y la energía deriva en simulaciones largas. Yoshida es simpléctico y de 4.º orden. *Coste*: tres cálculos de gravedad por paso.
 - **Canvas propio frente a p5.js**: p5 impone su propio bucle, encaja mal con React y su fuerte es la interacción en el canvas, que aquí no se usa. Con un runner propio, la simulación se prueba sin navegador.
+- **Estrellas que se cruzan en lugar de chocar.** Al principio cada estrella tenía un radio de 0,05 para una separación de 1, unas diez veces más grande de lo realista, así que chocaban a menudo y la simulación se paraba. Ahora son puntuales y la gravedad se suaviza a distancias muy cortas (suavizado de Plummer: r² pasa a ser r² + ε²). El motor lo recibe como un ajuste opcional que vale 0 por defecto, así que la caída, la órbita y la galería calculan exactamente igual. Además, las velocidades de partida se toman en el sistema del centro de masas, para que el conjunto no se desplace fuera del dibujo. *Coste*: en un acercamiento extremo, la fuerza es algo menor que la exacta.
 
 **Experiencia de aprendizaje**
 - **Simplificar para quien no sabe física.** Tras probar la app con personas sin formación, quité la gráfica, la tabla de datos y la fórmula con potencias de 10: abrumaban en lugar de ayudar. *Coste*: quien quiera los números exactos ya no los ve en pantalla, pero el tutor los sigue recibiendo y se los da si los pide.
@@ -250,13 +255,13 @@ src/
 
 **El laboratorio**
 - En la caída, la velocidad inicial hacia arriba es una sola para los dos objetos. Lo natural sería una por objeto, igual que hay una masa por objeto. No dio tiempo.
-- **En tres cuerpos, las estrellas chocan con más frecuencia de lo realista.** Cada estrella tiene un radio de 0,05 cuando A y B están separadas 1, para que se vean. Con estrellas reales, mucho más pequeñas respecto a las distancias, lo habitual sería que pasaran muy cerca y una saliera despedida, no que chocaran. Cuando chocan, la simulación se detiene: el contacto entre cuerpos es una simplificación fuera del modelo gravitatorio.
+- En tres cuerpos, la gravedad está suavizada a distancias muy cortas (ε = 0,05): es la técnica estándar en simulaciones de estrellas, pero en un acercamiento extremo la fuerza es algo menor que la exacta. Y como la escena usa unidades abstractas, no tiene reloj.
 - En tres cuerpos, con la masa de la tercera estrella a 0 (solo A y B), sus deslizadores de distancia y velocidad no tienen efecto.
 - No se puede escribir un valor exacto en los deslizadores.
 - Solo modo claro.
 
 **La galería**
-- No se pueden buscar órbitas propias (el extra de la Parte B).
+- No se pueden buscar órbitas propias (el extra de la Parte B). El experimento de tres cuerpos del laboratorio permite explorar configuraciones (masa, distancia y velocidad de la tercera estrella) y es un primer paso, pero no detecta si una órbita es periódica ni deja fijar todas las condiciones iniciales.
 - Moth I solo tiene cinco dígitos publicados: su error de cierre lo limitan los datos, no el motor.
 
 **Infraestructura**
@@ -266,7 +271,7 @@ src/
 
 Ideas que surgieron al probar la app y que dejé fuera por tiempo:
 - Dividir el experimento de tres cuerpos en dos partes: primero ver cómo se mueven dos cuerpos fuera de la Tierra y después añadir el tercero.
-- Estrellas de radio más realista, o sin choques y con la gravedad suavizada a distancias muy cortas.
+- Detectar si una configuración de tres cuerpos se repite: el paso que falta para buscar órbitas propias.
 - Una velocidad inicial por objeto en la caída.
 - Preguntas que se adapten cuando alguien falla, o poder repetir la predicción.
 - Que cada pieza del diálogo de la ley lleve directamente a su experimento.
@@ -293,4 +298,7 @@ Usé IA en dos momentos distintos.
 1. **Acotar la idea.** Primero planteé qué quería construir y pensé en sus límites. Lo recogí en una especificación funcional con el alcance (lo imprescindible, lo que quedaba para «si da tiempo» y lo que dejaba fuera), un plan por días y un orden de recorte por si iba con retraso. El plan cambió después al probar con usuarios, pero me sirvió para decidir rápido qué era lo esencial.
 2. **Decidir qué usar.** Leí documentación sobre las librerías posibles antes de elegir. Me planteé usar p5.js, porque ya la había usado en experimentos de creative coding, pero la descartamos: impone su propio bucle de dibujo, encaja mal con React y su punto fuerte es la interacción dentro del canvas, que aquí no se usa. Un canvas propio, con el bucle de la simulación fuera de React, además se puede probar sin navegador.
 3. **Diseñar la arquitectura**: el motor físico separado de la interfaz, una sola puerta para cambiar el laboratorio y los datos en un único sitio.
-4. **Escribir el código paso a paso.** Claude escribió buena parte del código a partir de lo que decidíamos. Yo lo apliqué cambio a cambio, lo revisé y lo comprobé (tipos, lint, tests y prueba en el navegador) antes de cada commit, y puedo explicar cada parte. También usé Claude Code para cambios mecánicos acotados, revisando siempre el resultado.
+4. **Escribir el código paso a paso.** Claude escribió buena parte del código a partir de lo que decidíamos. Yo lo apliqué cambio a cambio, lo revisé y lo comprobé (tipos, lint, tests y prueba en el navegador) antes de cada commit, y puedo explicar cada parte.
+5. **Revisar con Claude Code.** Usé Claude Code para cambios mecánicos acotados (primero me enseñaba dónde iba a tocar y lo aplicaba cuando lo confirmaba) y para una revisión final del código antes de entregar: código muerto, restos de funcionalidades que había quitado, tipado y organización. Decidí yo qué arreglar. Por ejemplo, descarté su propuesta de cambiar el modelo del tutor, porque se basaba en información desfasada.
+
+**Sobre la física.** No tengo formación en física. Para el motor y los cálculos me apoyé en la IA y en las fuentes publicadas, y lo verifiqué con tests: la caída, las órbitas, la conservación de la energía y el cierre de las órbitas de la galería. En cuatro días no puedo explicarlo como lo haría una matemática o una ingeniera, pero eso también aporta algo: la app es para personas sin formación en física, y diseñarla desde ahí me obligó a entender cada idea y a explicarla en lenguaje cotidiano.
