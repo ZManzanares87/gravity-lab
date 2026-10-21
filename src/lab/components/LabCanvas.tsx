@@ -231,7 +231,7 @@ export function LabCanvas() {
       const now = performance.now();
       if (clockRef.current && now - lastClockUpdate > 250) {
         const value = formatNumber(state.time / clock.secondsPerUnit, 3);
-        clockRef.current.textContent = `Tiempo: ${value}${clock.unit ? ` ${clock.unit}` : ""}`;
+        clockRef.current.textContent = clock.unit ? `Tiempo: ${value} ${clock.unit}` : "";
         if (distanceRef.current) {
           distanceRef.current.textContent = centerDistance ? `Distancia desde el centro de la Tierra: ${centerDistance}` : "";
         }
@@ -282,7 +282,7 @@ export function LabCanvas() {
     const clock = getScene(sceneId).run.clock;
     if (clockRef.current) {
       const value = formatNumber(runner.state.time / clock.secondsPerUnit, 3);
-      clockRef.current.textContent = `Tiempo: ${value}${clock.unit ? ` ${clock.unit}` : ""}`;
+      clockRef.current.textContent = clock.unit ? `Tiempo: ${value} ${clock.unit}` : "";
     }
   }, [playing, sceneId]);
 
@@ -306,7 +306,7 @@ export function LabCanvas() {
         </p>
         <div className="flex flex-col gap-1 sm:ml-auto sm:flex-row sm:gap-x-6">
           <span ref={distanceRef} className="tabular-nums empty:hidden" />
-          <output ref={clockRef} className="tabular-nums" />
+          <output ref={clockRef} className="tabular-nums empty:hidden" />
         </div>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3 empty:hidden">
