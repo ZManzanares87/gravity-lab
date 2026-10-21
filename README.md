@@ -273,7 +273,7 @@ Ideas que surgieron al probar la app y que dejé fuera por tiempo:
 - Dividir el experimento de tres cuerpos en dos partes: primero ver cómo se mueven dos cuerpos fuera de la Tierra y después añadir el tercero.
 - Detectar si una configuración de tres cuerpos se repite: el paso que falta para buscar órbitas propias.
 - Una velocidad inicial por objeto en la caída.
-- Preguntas que se adapten cuando alguien falla, o poder repetir la predicción.
+- Que el recorrido también se adapte cuando alguien falla (una pregunta de refuerzo o poder repetir la predicción). Ahora lo que se adapta es la conversación del tutor, no las preguntas.
 - Que cada pieza del diálogo de la ley lleve directamente a su experimento.
 - Que el tutor cierre el recorrido al terminar los tres experimentos.
 
