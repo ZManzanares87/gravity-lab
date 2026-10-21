@@ -182,7 +182,7 @@ const STAR_MASS = 1;
 const tercerCuerpo = defineScene({
   defaults: { thirdMass: 0, thirdDistance: 1.5, thirdSpeed: 0.4 },
   params: [
-    { key: "thirdMass", label: "Masa de la tercera estrella", unit: "", min: 0, max: 1, scale: "linear", ends: ["Ninguna", "Como A y B"] },
+    { key: "thirdMass", label: "Masa de la tercera estrella", unit: "", min: 0, max: 1, scale: "linear", ends: ["0", "Como A y B"] },
     { key: "thirdDistance", label: "Distancia de la tercera estrella", unit: "", min: 1, max: 3, scale: "linear", ends: ["Cerca", "Lejos"] },
     { key: "thirdSpeed", label: "Velocidad de la tercera estrella", unit: "", min: 0, max: 1, scale: "linear", ends: ["Quieta", "Rápida"] },
   ],
