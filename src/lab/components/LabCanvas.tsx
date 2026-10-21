@@ -30,6 +30,7 @@ export function LabCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const clockRef = useRef<HTMLOutputElement>(null);
   const distanceRef = useRef<HTMLSpanElement>(null);
+  const legendRef = useRef<HTMLParagraphElement>(null);
   const runnerRef = useRef<SimulationRunner | null>(null);
   const sceneId = useLabStore((state) => state.sceneId);
   const runId = useLabStore((state) => state.runId);
@@ -203,26 +204,15 @@ export function LabCanvas() {
       context.font = `700 14px ${fontFamily}`;
       state.bodies.forEach(drawBody);
 
-      // Leyenda: el mismo círculo hueco y qué significa, en la esquina superior izquierda.
-      if (anyMarker) {
-        const legendY = CANVAS_PADDING_PX + MARKER_RADIUS_PX;
-        context.beginPath();
-        context.arc(CANVAS_PADDING_PX + MARKER_RADIUS_PX, legendY, MARKER_RADIUS_PX, 0, 2 * Math.PI);
-        context.lineWidth = 1.5;
-        context.strokeStyle = ink;
-        context.stroke();
-        context.font = `400 13px ${fontFamily}`;
-        context.textAlign = "left";
-        context.fillStyle = ink;
-        context.fillText("Objeto demasiado pequeño para verse a escala", CANVAS_PADDING_PX + 2 * MARKER_RADIUS_PX + 6, legendY + 4);
-      }
+      // La leyenda está fuera del canvas, así nunca choca con un cuerpo. Solo se toca si cambia.
+      if (legendRef.current && legendRef.current.hidden === anyMarker) legendRef.current.hidden = !anyMarker;
 
       // 3. El reloj, 4 veces por segundo.
       const clock = scene.run.clock;
       const now = performance.now();
       if (clockRef.current && now - lastClockUpdate > 250) {
         const value = formatNumber(state.time / clock.secondsPerUnit, 3);
-        clockRef.current.textContent = `t = ${value}${clock.unit ? ` ${clock.unit}` : ""}`;
+        clockRef.current.textContent = `Tiempo: ${value}${clock.unit ? ` ${clock.unit}` : ""}`;
         if (distanceRef.current) {
           distanceRef.current.textContent = centerDistance ? `Distancia desde el centro de la Tierra: ${centerDistance}` : "";
         }
@@ -273,7 +263,7 @@ export function LabCanvas() {
     const clock = getScene(sceneId).run.clock;
     if (clockRef.current) {
       const value = formatNumber(runner.state.time / clock.secondsPerUnit, 3);
-      clockRef.current.textContent = `t = ${value}${clock.unit ? ` ${clock.unit}` : ""}`;
+      clockRef.current.textContent = `Tiempo: ${value}${clock.unit ? ` ${clock.unit}` : ""}`;
     }
   }, [playing, sceneId]);
 
@@ -289,10 +279,19 @@ export function LabCanvas() {
         aria-label={`Simulación del experimento «${EXPERIMENT_TITLES[sceneId]}»`}
         className="block aspect-[4/3] w-full border border-ink/20 bg-paper"
       />
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      {/* Datos de la simulación, como el pie de una figura: una línea en escritorio, en columna en móvil. */}
+      <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6">
+        <p ref={legendRef} hidden className="flex items-center gap-2">
+          <span aria-hidden="true" className="inline-block size-3 shrink-0 rounded-full border-2 border-ink" />
+          Objeto demasiado pequeño para verse a escala
+        </p>
+        <div className="flex flex-col gap-1 sm:ml-auto sm:flex-row sm:gap-x-6">
+          <span ref={distanceRef} className="tabular-nums empty:hidden" />
+          <output ref={clockRef} className="tabular-nums" />
+        </div>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-3 empty:hidden">
         <PlaybackControls />
-        <span ref={distanceRef} className="ml-auto tabular-nums text-ink-soft" />
-        <output ref={clockRef} className="tabular-nums text-ink-soft" />
       </div>
       <ContactMessage />
     </div>
