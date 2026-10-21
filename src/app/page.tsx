@@ -22,6 +22,20 @@ const STEPS = [
   },
 ] as const;
 
+/** Número pequeño de cada fila. El orden ya lo anuncia la lista (<ol>): el número es solo visual. */
+function RowNumber({ value, tone }: { value: number; tone: "step" | "experiment" }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full text-sm font-bold text-paper ${
+        tone === "step" ? "bg-body-a" : "bg-ink"
+      }`}
+    >
+      {value}
+    </span>
+  );
+}
+
 export default function HomePage() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8">
@@ -55,55 +69,51 @@ export default function HomePage() {
         </svg>
       </div>
 
-      <section aria-labelledby="como-funciona" className="flex flex-col gap-4">
-        <h2 id="como-funciona" className="text-xl font-bold">
-          Cómo funciona cada experimento
-        </h2>
-        <ol className="grid gap-4 sm:grid-cols-3">
-          {STEPS.map((step, i) => (
-            <li key={step.name} className="flex flex-col gap-2 border border-ink/20 bg-paper p-4">
-              <div className="flex items-center gap-3">
-                <span
-                  aria-hidden="true"
-                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-body-a font-bold text-paper"
-                >
-                  {i + 1}
-                </span>
-                <strong className="text-lg">{step.name}</strong>
-              </div>
-              <span className="text-ink-soft">{step.text}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
+      {/* En escritorio, los pasos y los experimentos van en paralelo: la página cabe sin apenas scroll. */}
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+        <section aria-labelledby="como-funciona" className="flex flex-col gap-3">
+          <h2 id="como-funciona" className="text-xl font-bold">
+            Cómo funciona cada experimento
+          </h2>
+          <ol className="flex flex-col gap-2">
+            {STEPS.map((step, i) => (
+              <li key={step.name} className="flex items-start gap-3 border border-ink/20 bg-paper px-4 py-3">
+                <RowNumber value={i + 1} tone="step" />
+                <p>
+                  <strong>{step.name}.</strong> <span className="text-ink-soft">{step.text}</span>
+                </p>
+              </li>
+            ))}
+          </ol>
+        </section>
 
-      <section aria-labelledby="experimentos" className="flex flex-col gap-4">
-        <h2 id="experimentos" className="text-xl font-bold">
-          Los tres experimentos
-        </h2>
-        <ol className="grid gap-4 sm:grid-cols-3">
-          {SCENE_ORDER.map((id, i) => (
-            <li key={id} className="flex flex-col gap-1 border-t-4 border-ink bg-paper p-4">
-              <span className="text-sm text-ink-soft">Experimento {i + 1}</span>
-              <strong>{EXPERIMENT_TITLES[id]}</strong>
-            </li>
-          ))}
-        </ol>
-        <p className="text-ink-soft">
-          Un tutor con IA te acompaña para resolver dudas y explorar nuevas preguntas con experimentos.
-        </p>
-      </section>
-
-      <div>
+        <section aria-labelledby="experimentos" className="flex flex-col gap-3">
+          <h2 id="experimentos" className="text-xl font-bold">
+            Los tres experimentos
+          </h2>
+          <ol className="flex flex-col gap-2">
+            {SCENE_ORDER.map((id, i) => (
+              <li key={id} className="flex items-start gap-3 border border-ink/20 bg-paper px-4 py-3">
+                <RowNumber value={i + 1} tone="experiment" />
+                <strong>{EXPERIMENT_TITLES[id]}</strong>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <Link
           href="/laboratorio"
-          className="inline-flex min-h-13 items-center gap-2 bg-ink px-7 text-lg font-bold text-paper hover:bg-ink/85"
+          className="inline-flex min-h-11 shrink-0 items-center gap-2 bg-ink px-5 font-bold text-paper hover:bg-ink/85"
         >
           Empezar el experimento 1
           <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12h14M13 6l6 6-6 6" />
           </svg>
         </Link>
+        <p className="text-sm text-ink-soft">
+          Un tutor con IA te acompaña para resolver dudas y explorar nuevas preguntas con experimentos.
+        </p>
+          </div>
+        </section>
       </div>
     </main>
   );
