@@ -24,13 +24,13 @@ const STEPS = [
 
 export default function HomePage() {
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-12 px-4 py-12">
-      <div className="flex flex-wrap items-center gap-12">
-        <div className="flex min-w-0 flex-[999_1_32rem] flex-col gap-5">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8">
+      <div className="flex flex-wrap items-center gap-8">
+        <div className="flex min-w-0 flex-[999_1_32rem] flex-col gap-4">
           <p className="text-sm font-bold tracking-wider text-ink-soft uppercase">
             Un laboratorio para entender la gravedad
           </p>
-          <h1 className="text-4xl leading-tight font-bold sm:text-5xl">
+          <h1 className="text-3xl leading-tight font-bold sm:text-4xl">
             ¿Por qué caen las cosas?
             <br />
             ¿Y por qué la Luna no?
@@ -45,7 +45,7 @@ export default function HomePage() {
           role="img"
           aria-label="La Tierra con la Luna girando a su alrededor"
           viewBox="0 0 320 320"
-          className="w-full max-w-72 flex-[1_1_16rem]"
+          className="hidden w-full max-w-56 flex-[1_1_14rem] sm:block"
         >
           <circle cx="160" cy="160" r="128" fill="none" className="stroke-ink" strokeWidth="1.5" strokeDasharray="4 6" />
           <circle cx="160" cy="160" r="46" className="fill-body-c stroke-ink" strokeWidth="2" />
@@ -61,14 +61,16 @@ export default function HomePage() {
         </h2>
         <ol className="grid gap-4 sm:grid-cols-3">
           {STEPS.map((step, i) => (
-            <li key={step.name} className="flex flex-col gap-2 border border-ink/20 bg-paper p-5">
-              <span
-                aria-hidden="true"
-                className="inline-flex size-8 items-center justify-center rounded-full bg-body-a font-bold text-paper"
-              >
-                {i + 1}
-              </span>
-              <strong className="text-lg">{step.name}</strong>
+            <li key={step.name} className="flex flex-col gap-2 border border-ink/20 bg-paper p-4">
+              <div className="flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-body-a font-bold text-paper"
+                >
+                  {i + 1}
+                </span>
+                <strong className="text-lg">{step.name}</strong>
+              </div>
               <span className="text-ink-soft">{step.text}</span>
             </li>
           ))}
