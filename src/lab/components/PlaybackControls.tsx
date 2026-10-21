@@ -52,7 +52,7 @@ export function PlaybackControls() {
   if (phase === "predict") return null;
 
   const main = finished
-    ? { label: "Repetir", icon: <RestartIcon /> }
+    ? { label: "Repetir experimento", icon: <RestartIcon /> }
     : playing
       ? { label: "Pausar", icon: <PauseIcon /> }
       : { label: "Reproducir", icon: <PlayIcon /> };

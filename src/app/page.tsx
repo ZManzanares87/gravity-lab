@@ -39,18 +39,6 @@ export default function HomePage() {
             Con tres experimentos vas a descubrir, pieza a pieza, la ley que lo explica todo: desde
             una manzana que cae hasta la Luna girando. No hace falta saber física.
           </p>
-          <div className="mt-2 flex flex-wrap items-center gap-4">
-            <Link
-              href="/laboratorio"
-              className="inline-flex min-h-13 items-center gap-2 bg-ink px-7 text-lg font-bold text-paper hover:bg-ink/85"
-            >
-              Empezar el experimento 1
-              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </Link>
-            <span className="text-ink-soft">Unos 10 minutos</span>
-          </div>
         </div>
 
         <svg
@@ -91,7 +79,7 @@ export default function HomePage() {
         <h2 id="experimentos" className="text-xl font-bold">
           Los tres experimentos
         </h2>
-        <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="grid gap-4 sm:grid-cols-3">
           {SCENE_ORDER.map((id, i) => (
             <li key={id} className="flex flex-col gap-1 border-t-4 border-ink bg-paper p-4">
               <span className="text-sm text-ink-soft">Experimento {i + 1}</span>
@@ -100,10 +88,21 @@ export default function HomePage() {
           ))}
         </ol>
         <p className="text-ink-soft">
-          En todo momento tienes un tutor con IA: pregúntale lo que no entiendas y puede preparar
-          experimentos por ti.
+          Un tutor con IA te acompaña para resolver dudas y explorar nuevas preguntas con experimentos.
         </p>
       </section>
+
+      <div>
+        <Link
+          href="/laboratorio"
+          className="inline-flex min-h-13 items-center gap-2 bg-ink px-7 text-lg font-bold text-paper hover:bg-ink/85"
+        >
+          Empezar el experimento 1
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </Link>
+      </div>
     </main>
   );
 }
