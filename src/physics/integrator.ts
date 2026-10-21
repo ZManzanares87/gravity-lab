@@ -13,8 +13,8 @@ export interface IntegratorState {
 }
 
 /** Prepara el estado inicial calculando las primeras aceleraciones. */
-export function startIntegrator(bodies: readonly Body[], G: number): IntegratorState {
-  return { bodies, accelerations: accelerations(bodies, G) };
+export function startIntegrator(bodies: readonly Body[], G: number, softening = 0): IntegratorState {
+  return { bodies, accelerations: accelerations(bodies, G, softening) };
 }
 
 /**
@@ -28,7 +28,7 @@ export function startIntegrator(bodies: readonly Body[], G: number): IntegratorS
  * el error no se acumula en una sola dirección y la energía se conserva
  * a largo plazo: las órbitas no se abren en espiral.
  */
-export function verletStep(current: IntegratorState, G: number, dt: number): IntegratorState {
+export function verletStep(current: IntegratorState, G: number, dt: number, softening = 0): IntegratorState {
   const halfDt = dt / 2;
 
   const moved = current.bodies.map((body, i) => {
@@ -40,7 +40,7 @@ export function verletStep(current: IntegratorState, G: number, dt: number): Int
     };
   });
 
-  const newAccelerations = accelerations(moved, G);
+  const newAccelerations = accelerations(moved, G, softening);
 
   const bodies = moved.map((body, i) => ({
     ...body,
@@ -68,10 +68,10 @@ const W_MIDDLE = -CBRT_2 / (2 - CBRT_2);
  * 0,045 de su punto de partida tras un periodo; con Yoshida, 0,0017, que ya
  * es el límite que permite la precisión de las condiciones publicadas.
  */
-export function yoshidaStep(current: IntegratorState, G: number, dt: number): IntegratorState {
-  const first = verletStep(current, G, W_OUTER * dt);
-  const middle = verletStep(first, G, W_MIDDLE * dt);
-  return verletStep(middle, G, W_OUTER * dt);
+export function yoshidaStep(current: IntegratorState, G: number, dt: number, softening = 0): IntegratorState {
+  const first = verletStep(current, G, W_OUTER * dt, softening);
+  const middle = verletStep(first, G, W_MIDDLE * dt, softening);
+  return verletStep(middle, G, W_OUTER * dt, softening);
 }
 
 /**

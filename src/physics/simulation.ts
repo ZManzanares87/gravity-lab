@@ -16,7 +16,7 @@ export interface AdvanceResult {
 }
 
 export function createSimulation(bodies: readonly Body[], config: PhysicsConfig): Simulation {
-  return { config, time: 0, integrator: startIntegrator(bodies, config.G) };
+  return { config, time: 0, integrator: startIntegrator(bodies, config.G, config.softening) };
 }
 
 /**
@@ -30,7 +30,7 @@ export function advance(simulation: Simulation, steps: number): AdvanceResult {
   let time = simulation.time;
 
   for (let i = 0; i < steps; i++) {
-    integrator = yoshidaStep(integrator, G, dt);
+    integrator = yoshidaStep(integrator, G, dt, simulation.config.softening);
     time += dt;
 
     // El contacto se comprueba tras el paso completo, nunca entre los
@@ -40,7 +40,7 @@ export function advance(simulation: Simulation, steps: number): AdvanceResult {
       const resolved = resolveContacts(integrator.bodies, pairs);
       return {
         // Tras mover cuerpos, las aceleraciones guardadas ya no valen: se recalculan.
-        simulation: { ...simulation, time, integrator: startIntegrator(resolved.bodies, G) },
+        simulation: { ...simulation, time, integrator: startIntegrator(resolved.bodies, G, simulation.config.softening) },
         contacts: resolved.landings.map(({ landedId, baseId }) => ({
           bodyId: landedId,
           otherBodyId: baseId,

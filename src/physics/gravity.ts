@@ -20,13 +20,14 @@ export function forceBetween(a: Body, b: Body, G: number): number {
  *
  * Devuelve las aceleraciones en el mismo orden que los cuerpos.
  */
-export function accelerations(bodies: readonly Body[], G: number): Vec2[] {
+export function accelerations(bodies: readonly Body[], G: number, softening = 0): Vec2[] {
   return bodies.map((body) =>
     bodies.reduce<Vec2>((total, other) => {
       if (other === body) return total;
 
       const delta = sub(other.position, body.position);
-      const r2 = lengthSquared(delta);
+      // Con suavizado, la fuerza no crece sin límite cuando dos cuerpos casi se tocan.
+      const r2 = lengthSquared(delta) + softening * softening;
       // Dos cuerpos en el mismo punto exacto: la fórmula daría infinito.
       if (r2 === 0) return total;
 

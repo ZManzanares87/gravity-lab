@@ -37,6 +37,8 @@ export interface PhysicsConfig {
   readonly G: number;
   /** Tamaño del paso de tiempo. Siempre fijo (ver bloque 2 de la especificación). */
   readonly dt: number;
+  /** Suavizado de la gravedad a distancias muy cortas (Plummer): r² pasa a ser r² + ε². 0 o ausente: gravedad exacta. */
+  readonly softening?: number;
 }
 
 /** Contacto entre dos cuerpos: la simulación debe pausarse y anunciarlo. */

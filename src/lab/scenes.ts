@@ -175,9 +175,26 @@ const lanzamiento = defineScene({
 });
 
 // ── Tercer cuerpo (unidades abstractas, como la galería) ────────────
-const STAR_RADIUS = 0.05;
+/** Estrellas puntuales: nunca chocan. A distancias muy cortas la gravedad se suaviza (softening). */
+const STAR_RADIUS = 0;
+/** Suavizado de la gravedad entre estrellas: del tamaño que tenían antes como radio. */
+const SOFTENING = 0.05;
 /** A y B pesan siempre lo mismo: lo que importa es cuánto pesa la tercera comparada con ellas. */
 const STAR_MASS = 1;
+
+/**
+ * Resta a todos los cuerpos el movimiento del conjunto: sin impulso neto, el sistema no se
+ * desplaza y se queda a la vista. El movimiento de unos respecto a otros, y el caos, no cambian.
+ */
+function withoutDrift(bodies: Body[]): Body[] {
+  const totalMass = bodies.reduce((sum, body) => sum + body.mass, 0);
+  const px = bodies.reduce((sum, body) => sum + body.mass * body.velocity.x, 0);
+  const py = bodies.reduce((sum, body) => sum + body.mass * body.velocity.y, 0);
+  return bodies.map((body) => ({
+    ...body,
+    velocity: vec(body.velocity.x - px / totalMass, body.velocity.y - py / totalMass),
+  }));
+}
 
 const tercerCuerpo = defineScene({
   defaults: { thirdMass: 0, thirdDistance: 1.5, thirdSpeed: 0.4 },
@@ -188,23 +205,24 @@ const tercerCuerpo = defineScene({
   ],
   G: 1,
   run: {
-    physics: { G: 1, dt: 1e-3 },
+    physics: { G: 1, dt: 1e-3, softening: SOFTENING },
     timeScale: 1,
     clock: { unit: "", secondsPerUnit: 1 },
   },
   buildBodies: ({ thirdMass, thirdDistance, thirdSpeed }) => {
-    // Órbita circular de dos estrellas iguales separadas 1: v = √(G·m / 2d).
-    const binarySpeed = Math.sqrt(STAR_MASS / 2);
+    // Órbita circular de dos estrellas iguales separadas d = 1, con la gravedad suavizada:
+    // v = √(G·m·d² / (2·(d² + ε²)^(3/2))). Con ε = 0 es la fórmula de siempre, √(G·m / 2d).
+    const binarySpeed = Math.sqrt(STAR_MASS / (2 * (1 + SOFTENING ** 2) ** 1.5));
     const binary: Body[] = [
       { id: "a", name: "Estrella A", mass: STAR_MASS, radius: STAR_RADIUS, position: vec(-0.5, 0), velocity: vec(0, -binarySpeed) },
       { id: "b", name: "Estrella B", mass: STAR_MASS, radius: STAR_RADIUS, position: vec(0.5, 0), velocity: vec(0, binarySpeed) },
     ];
     // Con masa 0 la tercera estrella no existe: ni siquiera como cuerpo de prueba.
     if (thirdMass <= 0) return binary;
-    return [
+    return withoutDrift([
       ...binary,
       { id: "c", name: "Estrella C", mass: thirdMass, radius: STAR_RADIUS, position: vec(0, thirdDistance), velocity: vec(-thirdSpeed, 0) },
-    ];
+    ]);
   },
   view: () => ({ minX: -2.5, maxX: 2.5, minY: -2.5, maxY: 2.5 }),
 });

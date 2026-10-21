@@ -56,7 +56,7 @@ describe("escenas del laboratorio", () => {
     const bodies = scene.buildBodies(scene.defaults);
     expect(bodies).toHaveLength(2);
     // Periodo de la órbita circular: 2π · 0,5 / √0,5 = π · √2.
-    const { simulation } = runScene(bodies, scene, Math.PI * Math.SQRT2);
+    const { simulation } = runScene(bodies, scene, Math.PI / length(bodies[0]!.velocity));
     const [a] = snapshot(simulation).bodies;
     expect(length(sub(a!.position, bodies[0]!.position))).toBeLessThan(1e-3);
   });
@@ -82,5 +82,25 @@ describe("vista de Lanzamiento", () => {
       farthest = Math.max(farthest, length(sub(projectile!.position, earth!.position)));
     }
     expect(farthest).toBeLessThan(extent);
+  });
+});
+
+describe("tercer cuerpo", () => {
+  it("las estrellas no chocan: son puntuales y la gravedad se suaviza a distancias muy cortas", () => {
+    const scene = SCENES["tercer-cuerpo"];
+    const params = { thirdMass: 0.5, thirdDistance: 1.5, thirdSpeed: 0.4 };
+    const { simulation, contacts } = advance(createSimulation(scene.buildBodies(params), scene.run.physics), 20_000);
+    expect(contacts).toHaveLength(0);
+    snapshot(simulation).bodies.forEach((body) => {
+      expect(Number.isFinite(body.position.x) && Number.isFinite(body.position.y)).toBe(true);
+    });
+  });
+
+  it("el sistema no tiene impulso neto: se queda a la vista en lugar de desplazarse", () => {
+    const bodies = SCENES["tercer-cuerpo"].buildBodies({ thirdMass: 0.5, thirdDistance: 1.5, thirdSpeed: 0.4 });
+    const px = bodies.reduce((sum, body) => sum + body.mass * body.velocity.x, 0);
+    const py = bodies.reduce((sum, body) => sum + body.mass * body.velocity.y, 0);
+    expect(Math.abs(px)).toBeLessThan(1e-12);
+    expect(Math.abs(py)).toBeLessThan(1e-12);
   });
 });
