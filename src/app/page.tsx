@@ -38,7 +38,7 @@ function RowNumber({ value, tone }: { value: number; tone: "step" | "experiment"
 
 export default function HomePage() {
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 lg:min-h-[calc(100dvh-4rem)] lg:justify-center">
       <div className="flex flex-wrap items-center gap-8">
         <div className="flex min-w-0 flex-[999_1_32rem] flex-col gap-4">
           <p className="text-sm font-bold tracking-wider text-ink-soft uppercase">
