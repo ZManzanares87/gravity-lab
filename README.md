@@ -1,36 +1,296 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gravity Lab
 
-## Getting Started
+Una aplicación web para que una persona adulta sin formación en física entienda la **ley de gravitación universal** (F = G · m₁ · m₂ / r²) a base de predecir, mirar y entender, con un **tutor con IA** que conversa, se adapta y prepara experimentos. Incluye además una **galería de seis órbitas periódicas** del problema de los tres cuerpos.
 
-First, run the development server:
+- **Versión desplegada:** https://gravity-lab-rosy.vercel.app
+- **Repositorio:** https://github.com/ZManzanares87/gravity-lab
+
+---
+
+## Cómo verla
+
+### Online (recomendado)
+
+Abre https://gravity-lab-rosy.vercel.app. No hace falta configurar nada: el tutor usa mi clave de Anthropic, con un límite de gasto (ver [Costes y protección](#costes-y-protección)).
+
+### En local
+
+Requisitos: Node.js 20.9 o superior (lo pide Next.js 16) y pnpm.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/ZManzanares87/gravity-lab.git
+cd gravity-lab
+pnpm install
+cp .env.example .env.local   # y pon tu clave en ANTHROPIC_API_KEY
+pnpm dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Otras órdenes:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm exec tsc --noEmit   # tipos
+pnpm lint                # ESLint
+pnpm test                # tests (Vitest)
+pnpm build && pnpm start # versión de producción
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Docker
 
-## Learn More
+No se incluye. La prueba pide al menos una de las dos vías de entrega, y la versión desplegada la cubre sin montar nada. En local basta con `pnpm` y una clave propia. Preferí dedicar el tiempo a la experiencia de aprendizaje antes que entregar una configuración de Docker que no hubiera podido probar a fondo.
 
-To learn more about Next.js, take a look at the following resources:
+## Variables de entorno
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable | ¿Obligatoria? | Para qué |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Solo para el tutor | Sin ella, la app funciona en **modo reducido**: experimentos, explicaciones, la ley y la galería funcionan igual, y el panel del tutor avisa claramente de que no está disponible (la ruta responde 503 con el código `tutor-no-disponible`). |
+| `TUTOR_MODEL` | No | Modelo del tutor. Por defecto, `claude-haiku-5-5`. |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Hay un `.env.example` en el repositorio. Los `.env*` están en `.gitignore`, con la excepción `!.env.example`.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Parte A: el laboratorio
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### El recorrido
+
+- **Bienvenida (`/`)**: qué vas a descubrir y cómo funciona cada experimento. El botón para empezar está al final, después de las explicaciones.
+- **Laboratorio (`/laboratorio`)**: tres experimentos planteados como preguntas. Cada uno descubre una pieza de la ley:
+
+| Experimento | Pieza de la ley |
+|---|---|
+| ¿Influye la masa en la caída? | m₁ · m₂: si una masa se duplica, la fuerza se duplica |
+| ¿Por qué la Luna no se cae? | r²: al doble de distancia, cuatro veces menos fuerza |
+| ¿Y si hay tres cuerpos? | Universal: todo atrae a todo |
+
+### Predice → Mira → Entiende
+
+Cada experimento sigue el mismo patrón, porque equivocarse con una apuesta propia y comprobarlo se recuerda mejor que leer la respuesta:
+
+1. **Predice**: solo se ven la pregunta y las opciones. No hay controles que distraigan.
+2. **Mira**: al comprobar, la simulación arranca sola. Cuando llega al resultado, aparecen «¿Ha pasado lo que esperabas?» y el botón **Entender por qué**. Nada se revela solo: la persona decide cuándo pasar a la explicación.
+3. **Entiende**: resultado, una explicación corta, la pieza de la ley que se descubre y una invitación a probar otros valores en «Experimenta tú».
+
+El paso no se guarda aparte: el store tiene una sola **fase** (`predict`, `watch`, `ready`, `understand`) y la interfaz la lee. Así no puede haber combinaciones imposibles, y reproducir libremente nunca se salta la predicción. Hay tests que recorren la máquina de estados entera.
+
+### La ley
+
+«Consultar la ley de gravitación universal» abre un `<dialog>` nativo: primero la idea (todo atrae a todo), después la fórmula y cada letra en su orden (F, G, m₁ · m₂, r²). Cada pieza indica en qué experimento se descubre. Ese texto se calcula a partir del orden y los títulos de los experimentos, de modo que no puede desfasarse si cambian. La ley se entiende entera **sin la IA**.
+
+### La simulación
+
+- Canvas 2D propio, solo de visualización. Toda la interacción está en controles HTML nativos.
+- Los cuerpos demasiado pequeños para verse a escala **no se agrandan**: se dibujan con un círculo hueco, y una leyenda bajo el dibujo lo explica solo cuando aparece alguno.
+- Bajo el dibujo, una franja de datos: el **tiempo** y, en la órbita, la **distancia desde el centro de la Tierra**. Así siguen visibles aunque el proyectil salga del dibujo. La distancia sale del mismo cálculo que la cota del canvas.
+- Las etiquetas de los cuerpos buscan un hueco libre, así que dos cuerpos en el mismo sitio no se pisan el nombre.
+- La escena de tres cuerpos usa unidades abstractas (como la galería), así que sus deslizadores muestran **palabras en los extremos** («Cerca … Lejos», «0 … Como A y B») en lugar de números sin sentido.
+
+---
+
+## El tutor con IA
+
+### Integración
+
+AI SDK de Vercel con `@ai-sdk/anthropic`, en la ruta `/api/tutor`, con respuestas en streaming. El modelo es pequeño y rápido, configurable con `TUTOR_MODEL`, y tiene el razonamiento extendido desactivado.
+
+### Cómo se comporta
+
+- **Conversa, no da discursos**: frases cortas, como mucho tres por mensaje, y espera a que la persona responda antes de seguir.
+- **Tras cada predicción interviene solo**:
+  - Si fallas, primero te pregunta por qué lo pensabas y después explica partiendo de tu idea, con un ejemplo cotidiano.
+  - Si aciertas, te felicita y te deja elegir entre ir un paso más allá o pasar al siguiente experimento.
+- **Si le preguntas, responde primero.** Si el laboratorio no puede mostrar lo que preguntas, te explica qué pasaría y te dice que aquí todavía no se puede probar, sin inventar cifras.
+- **No adelanta la explicación** mientras miras la simulación, ni propone experimentos antes de que hayas predicho.
+- **Usa los conceptos con precisión**: velocidad, fuerza, masa y peso no son lo mismo, y si los confundes te lo aclara.
+
+### Cómo se adapta
+
+Con cada mensaje recibe el estado del laboratorio y lo usa:
+
+1. **Tu historial de la sesión**: aciertos y fallos. Con varios fallos simplifica; si aciertas, sube el nivel.
+2. **La fase en la que estás**: no es lo mismo estar prediciendo que haber visto ya la explicación.
+3. **Tus valores actuales** («tu bola de 80 kg»), no ejemplos genéricos.
+4. **Cómo preguntas**: si dices que no lo entiendes, lo explica desde otro ángulo.
+
+### Opera el laboratorio, con permiso
+
+El tutor no solo habla: con la herramienta `proponerExperimento` propone cambios (valores de los controles) y explica qué se va a ver.
+
+- **La persona acepta o rechaza.** Solo entonces se aplican, por la misma puerta que usan los controles (`dispatch` y `validateAction`). La IA no puede hacer nada que la persona no pueda hacer.
+- **La IA prepara y la persona ejecuta**: al aceptar, el experimento queda preparado y en pausa, y es la persona quien pulsa Play.
+- **Solo en el experimento actual**: abrir otro le enseñaría el resultado de uno que aún no ha predicho.
+
+Estas dos últimas reglas no dependen del prompt: las garantiza el código (`preparableActions`, una función pura con tests).
+
+### Contexto y seguridad
+
+- El contexto que viaja con cada mensaje describe solo el experimento actual: pregunta, controles con sus rangos, medidas del motor, fase, predicciones y piezas descubiertas.
+- **No inventa números**: usa los que calcula el motor.
+- **Prompt injection**: el contexto se trata como dato, no como instrucción, y el prompt lo dice explícitamente. Además, cualquier acción de la IA pasa por la misma validación que las de la persona.
+
+### Costes y protección
+
+- Límite de 30 peticiones por hora e IP, en memoria.
+- Historial recortado a los últimos 20 mensajes, contexto de hasta 4000 caracteres, respuestas de hasta 600 tokens y un máximo de 30 segundos por petición.
+- **Límite de gasto de 5 $** en un workspace propio de Anthropic, con una clave dedicada: es la garantía real de coste. Si se alcanza, el tutor deja de responder y todo lo demás sigue funcionando.
+
+---
+
+## Parte B: galería de tres cuerpos
+
+- Seis soluciones periódicas (Lagrange, Figura de ocho, Butterfly I, Goggles, Moth I y Yin-Yang I), cada una con su URL compartible (`/galeria/[slug]`). Se generan de forma estática con `generateStaticParams` y `dynamicParams = false`.
+- Las trayectorias y las miniaturas SVG se calculan en el build, en componentes de servidor. Solo el reproductor es de cliente.
+- Reproductor en canvas con estela (medida en tiempo, no en fotogramas, para que no parpadee a ×4), controles de reproducción, velocidad de ×0,25 a ×4 y órbita completa si el sistema pide movimiento reducido.
+- **Al volver a la galería** se recuerda la última órbita abierta y el foco vuelve a su tarjeta.
+- Las condiciones iniciales no se pueden cambiar a propósito: estas órbitas solo se repiten con valores exactos, y cambiarlos sería otra funcionalidad (buscar órbitas propias).
+- Fuentes: Šuvakov y Dmitrašinović, PRL 2013 (arXiv 1303.0181); Li y Liao (arXiv 1312.6796); Chenciner y Montgomery (arXiv math/0011268).
+
+---
+
+## Física verificada
+
+- Motor propio en TypeScript puro (`src/physics`), sin dependencias de React ni de Next. Una regla de ESLint lo impide.
+- **Integrador Yoshida de 4.º orden.** Empecé con Verlet, pero Yin-Yang I no cerraba (error de 0,045 tras un periodo). Con Yoshida, el error de cierre llega al límite de precisión de los datos publicados:
+
+| Órbita | Error de cierre tras un periodo |
+|---|---|
+| Lagrange | 2,80·10⁻⁵ |
+| Figura de ocho | 1,78·10⁻⁵ |
+| Butterfly I | 7,52·10⁻⁴ |
+| Goggles | 5,70·10⁻⁴ |
+| Moth I | 1,35·10⁻⁴ (datos publicados con solo 5 dígitos) |
+| Yin-Yang I | 1,66·10⁻³ |
+
+La energía se conserva mejor que 10⁻¹¹ en todas.
+
+**69 tests**, entre ellos:
+- g ≈ 9,8 m/s² en la superficie, y la aceleración no depende de la masa.
+- Al doble de distancia del centro de la Tierra, un cuarto de la fuerza: la regla exacta que enseña la app.
+- Tiempo de caída √(2h/g), y dos bolas que tocan el suelo a la vez.
+- Una órbita circular que cierra, y el cierre y la energía de las seis órbitas de la galería.
+- La máquina de estados del experimento, la validación de acciones, las garantías de las propuestas del tutor, el contexto del tutor y el límite de peticiones.
+
+---
+
+## Arquitectura
+
+```
+src/
+├── app/         Rutas: / (bienvenida), /laboratorio, /galeria, /galeria/[slug], /api/tutor
+├── physics/     Motor puro: tipos, gravedad, integrador, contactos (sin React)
+├── simulation/  Runner fuera de React (requestAnimationFrame, programador inyectable para tests)
+├── lab/         Escenas, experimentos, store, acciones y componentes del laboratorio
+├── gallery/     Soluciones, trayectorias y componentes de la galería
+├── tutor/       Prompt, contexto, herramientas, propuestas y componentes del tutor
+└── ui/          Componentes genéricos
+```
+
+- **Una sola puerta para cambiar el laboratorio**: `dispatch(LabAction)` la usan los controles, «Comprobar» y la IA, y se valida en un solo sitio.
+- **Una sola fuente de verdad**: el orden de los experimentos (`SCENE_ORDER`) es una tupla que usan el laboratorio, la bienvenida y la validación con Zod del tutor; los títulos viven en `EXPERIMENT_TITLES`; dónde se descubre cada pieza se calcula.
+- **El estado de la simulación vive fuera de React**: el canvas lo lee directamente, sin re-renderizar en cada fotograma.
+- **El contenido** (preguntas, explicaciones, piezas de la ley, soluciones) está en objetos tipados, separado del código que lo pinta.
+
+---
+
+## Accesibilidad
+
+- **Lighthouse: 100 en accesibilidad** en la bienvenida, el laboratorio y la galería, incluido el contraste de color. Lighthouse solo revisa la página al cargar, así que el resto lo probé a mano.
+- Todo se usa con teclado, con un foco visible único en toda la app y un enlace «Saltar al contenido». La página está declarada en español (`lang="es"`).
+- Componentes nativos donde el navegador ya resuelve teclado, foco y lectores de pantalla: `<dialog>` para la ley y `<details>` para los plegables.
+- **El foco acompaña al recorrido**: al comprobar va a «Mira qué pasa», al pulsar «Entender por qué» va al resultado y al pasar de experimento va a su título. Solo se mueve al avanzar, nunca al cargar la página.
+- Los deslizadores anuncian su valor real (`aria-valuetext`). Los de tres cuerpos anuncian su posición entre los dos extremos.
+- Los contactos se anuncian a lectores de pantalla, y la llegada del botón «Entender por qué» también, sin mover el foco. Los valores continuos, no.
+- La leyenda y los datos de la simulación son texto real fuera del canvas, legible por lectores de pantalla.
+- Zonas táctiles de al menos 44 px en el móvil. Se respeta `prefers-reduced-motion`.
+
+## Responsive
+
+- **Escritorio**: simulación a la izquierda y guía a la derecha. El canvas ocupa el alto que queda en la pantalla, así que cabe también en un portátil, y la columna derecha se queda a la vista al hacer scroll. El tutor es un desplegable bajo la guía: cerrado, una barra que avisa si el tutor ha escrito; abierto, la conversación.
+- **Móvil**: una sola columna. El tutor ocupa toda la pantalla al abrirlo, como hacen los chats de soporte en móvil, y al cerrarlo devuelve a la simulación.
+- **Tablet**: el tutor flota en una esquina.
+- Un fallo encontrado y arreglado: en móvil la página medía 434 px en una pantalla de 390. La columna automática del grid crecía con su contenido más ancho (la gráfica que después quité). Lo arregla una columna explícita `minmax(0, 1fr)`.
+
+---
+
+## Decisiones y alternativas descartadas
+
+**Física y simulación**
+- **Yoshida frente a Verlet y RK4**: Verlet no cerraba las órbitas complejas. RK4 no es simpléctico y la energía deriva en simulaciones largas. Yoshida es simpléctico y de 4.º orden. *Coste*: tres cálculos de gravedad por paso.
+- **Canvas propio frente a p5.js**: p5 impone su propio bucle, encaja mal con React y su fuerte es la interacción en el canvas, que aquí no se usa. Con un runner propio, la simulación se prueba sin navegador.
+
+**Experiencia de aprendizaje**
+- **Simplificar para quien no sabe física.** Tras probar la app con personas sin formación, quité la gráfica, la tabla de datos y la fórmula con potencias de 10: abrumaban en lugar de ayudar. *Coste*: quien quiera los números exactos ya no los ve en pantalla, pero el tutor los sigue recibiendo y se los da si los pide.
+- **De cuatro experimentos a tres.** El de la distancia era un medidor sin nada que mirar: su efecto solo se veía en la tabla. La distancia se explica ahora en el experimento de la órbita. Además, desapareció la única escena sin animación y, con ella, varias excepciones del código.
+- **Una fase en lugar de varios booleanos**: las combinaciones imposibles no se pueden escribir, y el paso nunca contradice a la simulación.
+- **Sin cajas de valor exacto en los deslizadores**: duplicaban cada control y daban sensación de caos.
+- **La bienvenida en su propia ruta (`/`)**, en lugar de una capa sobre el laboratorio: cada cosa tiene su URL.
+
+**El tutor**
+- **La IA propone, prepara y espera.** Nunca cambia el laboratorio sin permiso, y nunca reproduce: la persona pulsa Play. Esto lo garantiza el código, no solo el prompt.
+- **Conversación en lugar de explicación.** La primera versión respondía a cada predicción con un párrafo largo que repetía la explicación de pantalla. Ahora pregunta, escucha y explica poco a poco.
+- **A pantalla completa en móvil.** Comparé con los chats de soporte (que en móvil se muestran por encima de todo) y con los paneles de Apple y de Material Design. Un panel a media altura deja ver la simulación, pero con el teclado abierto apenas queda espacio para leer.
+- **Desplegable en escritorio.** Fijo y siempre abierto, en una pantalla de portátil quedaba cortado o le quitaba sitio a la guía. Cerrado ocupa una barra, y se abre cuando la persona quiere hablar con él.
+
+**Interfaz**
+- **El menú superior siempre visible.** Se planteó ocultarlo hasta pasar el ratón para ganar espacio, pero con teclado o en pantallas táctiles no existe «pasar el ratón». En su lugar, la columna de la guía y el tutor se queda a la vista al hacer scroll.
+
+**Infraestructura**
+- **Límite de peticiones en memoria frente a Redis**: en serverless es aproximado, porque cada instancia cuenta por su cuenta. Redis lo haría exacto, pero añade un servicio, credenciales y coste. La garantía real es el límite de gasto en Anthropic.
+- **Sin Docker**: ver [Cómo verla](#docker).
+
+---
+
+## Limitaciones conocidas
+
+**El tutor**
+- Es un modelo de lenguaje: aunque el prompt lo acota, a veces puede ser impreciso. La fuente fiable son las explicaciones fijas, escritas a mano; el tutor las complementa.
+- Se adapta en cómo habla, pero no cambia el recorrido: las preguntas y los experimentos son los mismos para todo el mundo.
+- No recuerda nada entre visitas: al recargar se empieza de cero.
+- Si se agota el límite de gasto, el tutor muestra un error genérico («No he podido responder…»), no uno específico de límite alcanzado.
+- En iOS (cualquier navegador, porque todos usan WebKit), el teclado se superpone a la página en lugar de redimensionarla, así que al escribir puede hacer falta desplazar el chat. En Android y en escritorio se adapta solo.
+
+**El laboratorio**
+- En la caída, la velocidad inicial hacia arriba es una sola para los dos objetos. Lo natural sería una por objeto, igual que hay una masa por objeto. No dio tiempo.
+- **En tres cuerpos, las estrellas chocan con más frecuencia de lo realista.** Cada estrella tiene un radio de 0,05 cuando A y B están separadas 1, para que se vean. Con estrellas reales, mucho más pequeñas respecto a las distancias, lo habitual sería que pasaran muy cerca y una saliera despedida, no que chocaran. Cuando chocan, la simulación se detiene: el contacto entre cuerpos es una simplificación fuera del modelo gravitatorio.
+- En tres cuerpos, con la masa de la tercera estrella a 0 (solo A y B), sus deslizadores de distancia y velocidad no tienen efecto.
+- No se puede escribir un valor exacto en los deslizadores.
+- Solo modo claro.
+
+**La galería**
+- No se pueden buscar órbitas propias (el extra de la Parte B).
+- Moth I solo tiene cinco dígitos publicados: su error de cierre lo limitan los datos, no el motor.
+
+**Infraestructura**
+- El límite de peticiones es aproximado en serverless (ver arriba).
+
+## Siguientes pasos
+
+Ideas que surgieron al probar la app y que dejé fuera por tiempo:
+- Dividir el experimento de tres cuerpos en dos partes: primero ver cómo se mueven dos cuerpos fuera de la Tierra y después añadir el tercero.
+- Estrellas de radio más realista, o sin choques y con la gravedad suavizada a distancias muy cortas.
+- Una velocidad inicial por objeto en la caída.
+- Preguntas que se adapten cuando alguien falla, o poder repetir la predicción.
+- Que cada pieza del diálogo de la ley lleve directamente a su experimento.
+- Que el tutor cierre el recorrido al terminar los tres experimentos.
+
+---
+
+## Cómo lo verifiqué
+
+- `pnpm exec tsc --noEmit`, `pnpm lint` y `pnpm test` antes de cada commit.
+- Pruebas en Chrome en incógnito, con ratón y solo con teclado, en un portátil, en la vista móvil de DevTools y en un iPhone real con la versión desplegada.
+- Lighthouse (accesibilidad) sobre la versión desplegada.
+- Varias personas sin formación en física probaron la versión desplegada. Su primera impresión fue que había demasiada información a la vez («demasiado caos»). De ahí salieron la página de bienvenida, el recorrido Predice → Mira → Entiende y la simplificación posterior: quitar la gráfica, los datos y un experimento, y un tutor que conversa en lugar de soltar explicaciones largas.
+- Cada commit explica en su cuerpo por qué se hizo el cambio.
+
+## Uso de IA en el desarrollo
+
+Usé IA en dos momentos distintos.
+
+**Para entender el problema.** Antes de escribir código, usé ChatGPT para trabajar la idea y, sobre todo, para entender yo misma la ley de gravitación universal. Me fijé en qué puntos me costaba más entender y diseñé la experiencia a partir de ellos.
+
+**Para construirla**, usé Claude como apoyo, en un papel parecido al de un tech lead, y trabajé por fases:
+
+1. **Acotar la idea.** Primero planteé qué quería construir y pensé en sus límites. Lo recogí en una especificación funcional con el alcance (lo imprescindible, lo que quedaba para «si da tiempo» y lo que dejaba fuera), un plan por días y un orden de recorte por si iba con retraso. El plan cambió después al probar con usuarios, pero me sirvió para decidir rápido qué era lo esencial.
+2. **Decidir qué usar.** Leí documentación sobre las librerías posibles antes de elegir. Me planteé usar p5.js, porque ya la había usado en experimentos de creative coding, pero la descartamos: impone su propio bucle de dibujo, encaja mal con React y su punto fuerte es la interacción dentro del canvas, que aquí no se usa. Un canvas propio, con el bucle de la simulación fuera de React, además se puede probar sin navegador.
+3. **Diseñar la arquitectura**: el motor físico separado de la interfaz, una sola puerta para cambiar el laboratorio y los datos en un único sitio.
+4. **Escribir el código paso a paso.** Claude escribió buena parte del código a partir de lo que decidíamos. Yo lo apliqué cambio a cambio, lo revisé y lo comprobé (tipos, lint, tests y prueba en el navegador) antes de cada commit, y puedo explicar cada parte. También usé Claude Code para cambios mecánicos acotados, revisando siempre el resultado.
